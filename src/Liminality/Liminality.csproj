@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <PackageId>PSIBR.Liminality</PackageId>
+    <Authors>@aidapsibr, @zoeysaurusrawr</Authors>
+    <Company>PSIBR, LLC</Company>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <Copyright>Copyright © 2020 PSIBR, LLC</Copyright>
+    <RootNamespace>PSIBR.Liminality</RootNamespace>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>
