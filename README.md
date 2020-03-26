@@ -21,7 +21,7 @@ dotnet build
 Once you've cloned the repo, from the repo root folder, run:
 
 ```
-dotnet run examples\AspNetCoreExample
+dotnet run --project examples/AspNetCoreExample
 ```
 
 ## Running the unit tests
