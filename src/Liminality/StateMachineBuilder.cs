@@ -1,99 +1,100 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace PSIBR.Liminality
 {
-    using TransitionMap = Dictionary<(Type CurrentState, Type Signal), (Type? Precondition, Type NewState)>;
+    public class StateMachineBuilder<TStateMachine> : StateMachineBuilder where TStateMachine : StateMachine<TStateMachine>
+    {
+        public StateMachineBuilder() 
+            : base((Type initialState) => new StateMachineDefinition<TStateMachine>(initialState))
+        {
+        }
+    }
 
     public class StateMachineBuilder
     {
-        private Type? _initialState;
-        protected readonly TransitionMap TransitionMap = new TransitionMap();
-        protected readonly StateBuilder _stateBuilder;
+        private readonly Func<Type, StateMachineDefinition> _definitionBuilder;
 
-        public StateMachineBuilder()
+        public StateMachineBuilder(Func<Type, StateMachineDefinition> definitionBuilder)
         {
-            _stateBuilder = new StateBuilder(this);
+            _definitionBuilder = definitionBuilder;
         }
 
         public StateBuilder StartsIn<TState>()
             where TState : class
         {
-            _initialState = typeof(TState);
-
-            return _stateBuilder;
-        }
-
-        private StateBuilder AddTransition<TState, TSignal, TNewState>()
-            where TState : class
-            where TSignal : class, new()
-            where TNewState : class
-        {
-            TransitionMap[(typeof(TState), typeof(TSignal))] = (null, typeof(TNewState));
-
-            return _stateBuilder;
-        }
-
-        private StateBuilder AddTransition<TState, TSignal, TPrecondition, TNewState>()
-            where TState : class
-            where TSignal : class, new()
-            where TPrecondition : class
-            where TNewState : class
-        {
-            TransitionMap[(typeof(TState), typeof(TSignal))] = (typeof(TPrecondition), typeof(TNewState));
-
-            return _stateBuilder;
+            return new StateBuilder(_definitionBuilder(typeof(TState)));
         }
 
         public class StateBuilder
         {
-            private readonly StateMachineBuilder _stateMachineBuilder;
+            private readonly StateMachineDefinition _stateMachineDefintion;
 
-            public StateBuilder(StateMachineBuilder stateMachineBuilder)
+            public StateBuilder(StateMachineDefinition stateMachineDefinition)
             {
-                _stateMachineBuilder = stateMachineBuilder;
+                _stateMachineDefintion = stateMachineDefinition;
             }
 
             public ForStateContext<TState> For<TState>()
                 where TState : class
-                => new ForStateContext<TState>(_stateMachineBuilder);
+                => new ForStateContext<TState>(this);
 
-            public TransitionMap Build() => _stateMachineBuilder.TransitionMap;
+            public StateMachineDefinition Build() => _stateMachineDefintion;
+
+            public StateBuilder AddTransition<TState, TSignal, TNewState>()
+                where TState : class
+                where TSignal : class, new()
+                where TNewState : class
+            {
+                _stateMachineDefintion[new StateMachineDefinition.Input(typeof(TState), typeof(TSignal))] = new StateMachineDefinition.Transition(null, typeof(TNewState));
+
+                return this;
+            }
+
+            public StateBuilder AddTransition<TState, TSignal, TPrecondition, TNewState>()
+                where TState : class
+                where TSignal : class, new()
+                where TPrecondition : class
+                where TNewState : class
+            {
+                _stateMachineDefintion[new StateMachineDefinition.Input(typeof(TState), typeof(TSignal))] = new StateMachineDefinition.Transition(typeof(TPrecondition), typeof(TNewState));
+
+                return this;
+            }
         }
 
         public class ForStateContext<TState>
             where TState : class
         {
-            private readonly StateMachineBuilder _stateMachineBuilder;
+            private readonly StateBuilder _stateBuilder;
 
-            public ForStateContext(StateMachineBuilder stateMachineBuilder)
+            public ForStateContext(StateBuilder stateBuilder)
             {
-                _stateMachineBuilder = stateMachineBuilder;
+                _stateBuilder = stateBuilder;
             }
 
             public OnContext<TState, TSignal> On<TSignal>()
                 where TSignal : class, new()
-                => new OnContext<TState, TSignal>(_stateMachineBuilder);
+                => new OnContext<TState, TSignal>(_stateBuilder);
         }
 
         public class OnContext<TState, TSignal>
             where TState : class
             where TSignal : class, new()
         {
-            private readonly StateMachineBuilder _stateMachineBuilder;
+            private readonly StateBuilder _stateBuilder;
 
-            public OnContext(StateMachineBuilder stateMachineBuilder)
+            public OnContext(StateBuilder stateBuilder)
             {
-                _stateMachineBuilder = stateMachineBuilder;
+                _stateBuilder = stateBuilder;
             }
 
             public StateBuilder MoveTo<TNewState>()
                 where TNewState : class
-                => _stateMachineBuilder.AddTransition<TState, TSignal, TNewState>();
+                => _stateBuilder.AddTransition<TState, TSignal, TNewState>();
 
             public WhenContext<TState, TSignal, TPrecondition> When<TPrecondition>()
                 where TPrecondition : class, IPrecondition<TSignal>
-                => new WhenContext<TState, TSignal, TPrecondition>(_stateMachineBuilder);
+                => new WhenContext<TState, TSignal, TPrecondition>(_stateBuilder);
         }
 
         public class WhenContext<TState, TSignal, TPrecondition>
@@ -101,16 +102,16 @@ namespace PSIBR.Liminality
             where TSignal : class, new()
             where TPrecondition : class, IPrecondition<TSignal>
         {
-            private readonly StateMachineBuilder _stateMachineBuilder;
+            private readonly StateBuilder _stateBuilder;
 
-            public WhenContext(StateMachineBuilder stateMachineBuilder)
+            public WhenContext(StateBuilder stateBuilder)
             {
-                _stateMachineBuilder = stateMachineBuilder;
+                _stateBuilder = stateBuilder;
             }
 
             public StateBuilder MoveTo<TNewState>()
                 where TNewState : class
-                => _stateMachineBuilder.AddTransition<TState, TSignal, TNewState>();
+                => _stateBuilder.AddTransition<TState, TSignal, TNewState>();
         }
     }
 

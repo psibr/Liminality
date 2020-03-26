@@ -8,35 +8,27 @@ using System.Threading.Tasks;
 
 namespace AspNetCoreExample
 {
-    using TransitionMap = Dictionary<(Type CurrentState, Type Signal), (Type Precondition, Type NewState)>;
-
-    public class SARSCoV2Assay : StateMachine
+    public class SARSCoV2Assay : StateMachine<SARSCoV2Assay>
     {
         public SARSCoV2Assay(
             /* Here you could add a repository or eventstream as a dependency */
-            Resolver resolver)
-            : base(resolver)
+            Resolver resolver, StateMachineDefinition<SARSCoV2Assay> stateMachineDefinition)
+            : base(resolver, stateMachineDefinition)
         {
         }
 
-        protected override TransitionMap Define(StateMachineBuilder stateMachineBuilder) =>
-            stateMachineBuilder
-                .StartsIn<Ready>()
-                .For<Ready>().On<BiologicalSequenceSample>().MoveTo<Analyzing>()
-                .For<Analyzing>().On<Analysis>().MoveTo<Evaluating>()
-                .For<Evaluating>().On<InconclusiveEvaluation>().MoveTo<Inconclusive>()
-                .For<Evaluating>().On<NegativeEvaluation>().MoveTo<Negative>()
-                .For<Evaluating>().On<PositiveEvaluation>().MoveTo<Positive>()
-                .Build();
+        protected object State { get; private set; } = new Ready();
 
         protected override ValueTask<object> LoadStateAsync(CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            return new ValueTask<object>(State);
         }
 
         protected override ValueTask<bool> PersistStateAsync(object state, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            State = state;
+
+            return new ValueTask<bool>(true);
         }
 
         /// <summary>

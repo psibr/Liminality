@@ -10,10 +10,13 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Liminality.Extensions.DependencyInjection;
+using PSIBR.Liminality.Extensions.DependencyInjection;
+
 
 namespace AspNetCoreExample
 {
+    using static SARSCoV2Assay;
+
     public class Startup
     {
         public Startup(IConfiguration configuration)
@@ -27,7 +30,15 @@ namespace AspNetCoreExample
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddLiminality();
-            services.AddTypedStateMachine<SARSCoV2Assay>();
+            
+            services.AddTypedStateMachine<SARSCoV2Assay>(definitionBuilder => definitionBuilder
+                .StartsIn<Ready>()
+                .For<Ready>().On<BiologicalSequenceSample>().MoveTo<Analyzing>()
+                .For<Analyzing>().On<Analysis>().MoveTo<Evaluating>()
+                .For<Evaluating>().On<InconclusiveEvaluation>().MoveTo<Inconclusive>()
+                .For<Evaluating>().On<NegativeEvaluation>().MoveTo<Negative>()
+                .For<Evaluating>().On<PositiveEvaluation>().MoveTo<Positive>()
+                .Build());
 
             services.AddControllers();
         }
