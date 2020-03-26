@@ -1,6 +1,6 @@
 # Liminality
 
-An idiomatic state machine library for .NET.
+Powerful idiomatic state machines for .NET.
 
 
 
