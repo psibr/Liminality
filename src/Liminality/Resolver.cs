@@ -14,11 +14,18 @@ namespace PSIBR.Liminality
 
         public Resolution<TSignal>? Resolve<TSignal>(StateMachineDefinition definition, Type stateType)
             where TSignal : class, new()
-            => definition.TryGetValue(new StateMachineDefinition.Input(stateType: stateType, signalType: typeof(TSignal)), out var transition)
-                ? new Resolution<TSignal>(
-                    precondition: _serviceProvider.GetService(transition.PreconditionType) as IPrecondition<TSignal>,
-                    state: (ISignalHandler<TSignal>)_serviceProvider.GetService(transition.NewStateType))
-                : new Nullable<Resolution<TSignal>>();
+            {
+                 if(!definition.TryGetValue(new StateMachineDefinition.Input(stateType: stateType, signalType: typeof(TSignal)), out var transition))
+                    return new Nullable<Resolution<TSignal>>();
+
+                IPrecondition<TSignal>? precondition = !(transition.PreconditionType is null)
+                    ? _serviceProvider.GetService(transition.PreconditionType) as IPrecondition<TSignal> 
+                    : null;
+                    
+                var state = (ISignalHandler<TSignal>)_serviceProvider.GetService(transition.NewStateType);
+
+                return new Resolution<TSignal>(precondition, state);
+            }
     }
 
     public struct Resolution<TSignal>
