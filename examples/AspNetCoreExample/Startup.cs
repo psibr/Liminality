@@ -10,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.OpenApi.Models;
 using PSIBR.Liminality.Extensions.DependencyInjection;
 
 
@@ -41,6 +42,11 @@ namespace AspNetCoreExample
                 .Build());
 
             services.AddControllers();
+
+                services.AddSwaggerGen(c =>
+                {
+                    c.SwaggerDoc("openapi", new OpenApiInfo { Title = "Liminality Examples", Version = "v1" });
+                });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -52,6 +58,13 @@ namespace AspNetCoreExample
             }
 
             app.UseHttpsRedirection();
+
+            app.UseSwagger(options => options.RouteTemplate = "{documentName}.json");
+
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/openapi.json", "Liminality Examples");
+            });
 
             app.UseRouting();
 

@@ -9,5 +9,9 @@
     <ProjectReference Include="..\..\src\Liminality\Liminality.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="5.2.1" />
+  </ItemGroup>
+
 
 </Project>
