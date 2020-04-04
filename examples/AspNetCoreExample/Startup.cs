@@ -32,7 +32,7 @@ namespace AspNetCoreExample
         {
             services.AddLiminality();
             
-            services.AddTypedStateMachine<SARSCoV2Assay>(definitionBuilder => definitionBuilder
+            services.AddTypedStateMachineFactory<SARSCoV2AssayFactory, SARSCoV2Assay>(definitionBuilder => definitionBuilder
                 .StartsIn<Ready>()
                 .For<Ready>().On<BiologicalSequenceSample>().MoveTo<Analyzing>()
                 .For<Analyzing>().On<Analysis>().MoveTo<Evaluating>()

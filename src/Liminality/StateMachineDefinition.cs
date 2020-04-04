@@ -77,6 +77,6 @@ namespace PSIBR.Liminality
                 precondition = PreconditionType;
                 newState = NewStateType;
             }
-        }   
+        }
     }
 }

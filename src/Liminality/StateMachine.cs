@@ -4,10 +4,18 @@ using System.Threading.Tasks;
 
 namespace PSIBR.Liminality
 {
-    public abstract class StateMachine<TStateMachine> where TStateMachine : StateMachine<TStateMachine>
+    public interface IStateMachine
+    {
+        ValueTask<ISignalResult> SignalAsync<TSignal>(TSignal signal, CancellationToken cancellationToken = default) where TSignal : class, new();
+        ValueTask<ISignalResult> SignalAsync<TSignal>(TSignal signal, SignalOptions signalOptions, CancellationToken cancellationToken = default) where TSignal : class, new();
+    }
+
+    public abstract class StateMachine<TStateMachine>
+        : IStateMachine
+    where TStateMachine : StateMachine<TStateMachine>
     {
         private readonly Resolver _resolver;
-        protected readonly StateMachineDefinition Definition;
+        protected readonly StateMachineDefinition<TStateMachine> Definition;
 
         protected StateMachine(Resolver resolver, StateMachineDefinition<TStateMachine> definition)
         {
@@ -15,33 +23,56 @@ namespace PSIBR.Liminality
             Definition = definition;
         }
 
-        public async ValueTask<(bool DidTransition, object State)> SignalAsync<TSignal>(
+        public async ValueTask<ISignalResult> SignalAsync<TSignal>(
             TSignal signal,
             CancellationToken cancellationToken = default)
-            where TSignal : class, new()
+        where TSignal : class, new()
         {
-            var currentState = await LoadStateAsync(cancellationToken).ConfigureAwait(false);
+            var signalValueTask = SignalAsync<TSignal>(signal, new SignalOptions(), cancellationToken: cancellationToken);
 
-            var resolution = _resolver.Resolve<TSignal>(Definition, currentState.GetType());
+            if (!signalValueTask.IsCompletedSuccessfully) await signalValueTask.ConfigureAwait(false);
 
-            if (resolution is null) return (false, currentState);
+            return signalValueTask.Result;
+        }
 
-            var preconditionValueTask = resolution.Value.Precondition?.CheckAsync(signal, cancellationToken);
+        public async ValueTask<ISignalResult> SignalAsync<TSignal>(
+            TSignal signal,
+            SignalOptions signalOptions,
+            CancellationToken cancellationToken = default)
+        where TSignal : class, new()
+        {
+            var startingState = await LoadStateAsync(cancellationToken).ConfigureAwait(false);
 
-            if (preconditionValueTask != null && !await preconditionValueTask.Value.ConfigureAwait(false)) return (false, currentState);
+            TransitionResolution<TSignal>? resolution = _resolver.ResolveTransition<TSignal>(Definition, startingState.GetType());
 
-            if (!await PersistStateAsync(resolution.Value.State, cancellationToken).ConfigureAwait(false))
-                return (false, currentState);
+            if (resolution is null) return new TransitionNotFoundResult(startingState, signal);
 
-            var handlerValueTask = resolution.Value.State.InvokeAsync(signal, cancellationToken);
+            if (!(resolution.Precondition is null))
+            {
+                var preconditionValueTask = resolution.Precondition.CheckAsync(signal, cancellationToken);
 
-            await handlerValueTask.ConfigureAwait(false);
+                // TODO: should catch any exceptions here
+                if (!preconditionValueTask.IsCompletedSuccessfully) await preconditionValueTask.ConfigureAwait(false);
 
-            return (true, resolution.Value.State);
+                if (!(preconditionValueTask.Result is null)) return new RejectedByPreconditionResult(startingState, signal, resolution.Transition, preconditionValueTask.Result);
+            }
+
+            await PersistStateAsync(resolution.State, cancellationToken).ConfigureAwait(false);
+
+            if (resolution.Handler is null) return new TransitionedResult(startingState, resolution.State);
+            
+            var handlerValueTask = resolution.Handler.InvokeAsync(new SignalContext(this, startingState, resolution.State), signal, cancellationToken);
+
+            // TODO: should catch any exceptions here
+            if (!handlerValueTask.IsCompletedSuccessfully) await handlerValueTask.ConfigureAwait(false);
+
+
+            // replace with a multiple transition result?
+            return new TransitionedResult(startingState, resolution.State);
         }
 
         protected abstract ValueTask<object> LoadStateAsync(CancellationToken cancellationToken = default);
 
-        protected abstract ValueTask<bool> PersistStateAsync(object state, CancellationToken cancellationToken = default);
+        protected abstract ValueTask PersistStateAsync(object state, CancellationToken cancellationToken = default);
     }
 }
