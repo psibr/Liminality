@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using PSIBR.Liminality;
@@ -16,19 +12,15 @@ namespace AspNetCoreExample.Controllers
         private readonly ILogger<Covid19Controller> _logger;
 
         public Covid19Controller(
-            SARSCoV2AssayFactory covid19AssayFactory,
             ILogger<Covid19Controller> logger)
         {
-            Covid19AssayFactory = covid19AssayFactory;
             _logger = logger;
         }
 
-        public SARSCoV2AssayFactory Covid19AssayFactory { get; }
-
         [HttpPost]
-        public IActionResult Post(SARSCoV2Assay.BiologicalSequenceSample sample)
+        public IActionResult Post(SARSCoV2Assay.BiologicalSequenceSample sample, [FromServices] Engine<SARSCoV2Assay> engine)
         {
-            var covid19Assay = Covid19AssayFactory.Create(sample.Id);
+            var covid19Assay = new SARSCoV2Assay(sample.Id, engine);
             var result = covid19Assay.Signal(sample);
 
             return result switch

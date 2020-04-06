@@ -8,8 +8,6 @@ namespace PSIBR.Liminality
     where TSignal : class
     {
         ValueTask<ISignalResult?> InvokeAsync(SignalContext<TStateMachine> context, TSignal signal, CancellationToken cancellationToken = default);
-
-        ValueTask<ISignalResult?> EmptyResult() => new ValueTask<ISignalResult?>((ISignalResult?)null);
     }
 
     public class SignalContext<TStateMachine>

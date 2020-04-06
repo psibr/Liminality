@@ -34,6 +34,13 @@ namespace PSIBR.Liminality
             return new TransitionResolution<TSignal>(transition, precondition, state);
         }
 
+        public TStateMachine CreateStateMachine(Func<Engine<TStateMachine>, TStateMachine> factoryFunc)
+        {
+            var stateMachine = factoryFunc(this);
+
+            return stateMachine;
+        }
+
         public async ValueTask<ISignalResult> SignalAsync<TSignal>(
             TStateMachine self,
             TSignal signal,

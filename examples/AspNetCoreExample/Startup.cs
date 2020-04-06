@@ -29,10 +29,8 @@ namespace AspNetCoreExample
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
-        {
-            services.AddLiminality();
-            
-            services.AddTypedStateMachineFactory<SARSCoV2AssayFactory, SARSCoV2Assay>(definitionBuilder => definitionBuilder
+        {            
+            services.AddStateMachine<SARSCoV2Assay>(definitionBuilder => definitionBuilder
                 .StartsIn<Ready>()
                 .For<Ready>().On<BiologicalSequenceSample>().MoveTo<Analyzing>()
                 .For<Analyzing>().On<Analysis>().MoveTo<Evaluating>()

@@ -5,28 +5,7 @@ using System.Threading.Tasks;
 using PSIBR.Liminality;
 
 namespace AspNetCoreExample
-{
-    public class SARSCoV2AssayFactory
-    {
-        private readonly StateMachineFactory _stateMachineFactory;
-
-        public SARSCoV2AssayFactory(StateMachineFactory stateMachineFactory)
-        {
-            _stateMachineFactory = stateMachineFactory;
-        }
-
-        public StateMachineScope<SARSCoV2Assay> CreateScoped(string id)
-        {
-            return _stateMachineFactory.CreateScopedStateMachine<SARSCoV2Assay>(engine => new SARSCoV2Assay(id, engine));
-        }
-
-        public SARSCoV2Assay Create(string id)
-        {
-            return _stateMachineFactory.CreateStateMachine<SARSCoV2Assay>(engine => new SARSCoV2Assay(id, engine));
-        }
-    }
-
-    public class SARSCoV2Assay : StateMachine<SARSCoV2Assay>
+{    public class SARSCoV2Assay : StateMachine<SARSCoV2Assay>
     {
         public SARSCoV2Assay(
             string id,
@@ -48,6 +27,7 @@ namespace AspNetCoreExample
                 (state, cancellationToken) => { State = state; return new ValueTask(); },
                 default);
 
+            // handle synchronyously ONLY as an example of this capability
             if (valueTask.IsCompletedSuccessfully) return valueTask.Result;
             else if (valueTask.IsFaulted) throw valueTask.AsTask().Exception;
             else throw new NotSupportedException("This state machine cannot execute async");
