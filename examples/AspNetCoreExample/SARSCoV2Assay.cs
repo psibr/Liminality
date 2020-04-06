@@ -17,12 +17,12 @@ namespace AspNetCoreExample
 
         public StateMachineScope<SARSCoV2Assay> CreateScoped(string id)
         {
-            return _stateMachineFactory.CreateScopedStateMachine<SARSCoV2Assay>(resolver => new SARSCoV2Assay(id, resolver));
+            return _stateMachineFactory.CreateScopedStateMachine<SARSCoV2Assay>(engine => new SARSCoV2Assay(id, engine));
         }
 
         public SARSCoV2Assay Create(string id)
         {
-            return _stateMachineFactory.CreateStateMachine<SARSCoV2Assay>(resolver => new SARSCoV2Assay(id, resolver));
+            return _stateMachineFactory.CreateStateMachine<SARSCoV2Assay>(engine => new SARSCoV2Assay(id, engine));
         }
     }
 
@@ -32,8 +32,8 @@ namespace AspNetCoreExample
             string id,
 
             /* Here you could add a repository or eventstream as a dependency */
-            Resolver<SARSCoV2Assay> resolver)
-            : base(resolver)
+            Engine<SARSCoV2Assay> engine)
+            : base(engine)
         {
         }
 

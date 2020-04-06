@@ -42,7 +42,7 @@ namespace PSIBR.Liminality.Extensions.DependencyInjection
             StateMachineDefinition<TStateMachine> definition = (StateMachineDefinition<TStateMachine>)definitionBuilder(new StateMachineBuilder<TStateMachine>());
 
             services.AddSingleton(definition);
-            services.AddScoped<Resolver<TStateMachine>>();
+            services.AddScoped<Engine<TStateMachine>>();
 
             foreach (var stateMachineComponent in definition.Values
                 .Select(transition =>

@@ -12,24 +12,24 @@ namespace PSIBR.Liminality
             _serviceProvider = serviceProvider;
         }
 
-        public StateMachineScope<TStateMachine> CreateScopedStateMachine<TStateMachine>(Func<Resolver<TStateMachine>, TStateMachine> factoryFunc)
+        public StateMachineScope<TStateMachine> CreateScopedStateMachine<TStateMachine>(Func<Engine<TStateMachine>, TStateMachine> factoryFunc)
         where TStateMachine : StateMachine<TStateMachine>
         {
             var scope = _serviceProvider.GetRequiredService<IServiceScopeFactory>().CreateScope();
             
-            var resolver = scope.ServiceProvider.GetRequiredService<Resolver<TStateMachine>>();
+            var engine = scope.ServiceProvider.GetRequiredService<Engine<TStateMachine>>();
 
-            var stateMachine = factoryFunc(resolver);
+            var stateMachine = factoryFunc(engine);
 
             return new StateMachineScope<TStateMachine>(scope, stateMachine);
         }
 
-        public TStateMachine CreateStateMachine<TStateMachine>(Func<Resolver<TStateMachine>, TStateMachine> factoryFunc)
+        public TStateMachine CreateStateMachine<TStateMachine>(Func<Engine<TStateMachine>, TStateMachine> factoryFunc)
         where TStateMachine : StateMachine<TStateMachine>
         {           
-            var resolver = _serviceProvider.GetRequiredService<Resolver<TStateMachine>>();
+            var engine = _serviceProvider.GetRequiredService<Engine<TStateMachine>>();
 
-            var stateMachine = factoryFunc(resolver);
+            var stateMachine = factoryFunc(engine);
 
             return stateMachine;
         }
