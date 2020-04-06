@@ -8,7 +8,6 @@ namespace PSIBR.Liminality.Extensions.DependencyInjection
     {
         public static void AddLiminality(this IServiceCollection services)
         {
-            services.AddScoped<Resolver>();
             services.AddScoped<StateMachineFactory>();
         }
 
@@ -40,7 +39,10 @@ namespace PSIBR.Liminality.Extensions.DependencyInjection
             Func<StateMachineBuilder, StateMachineDefinition> definitionBuilder)
         where TStateMachine : StateMachine<TStateMachine>
         {
-            var definition = (StateMachineDefinition<TStateMachine>)definitionBuilder(new StateMachineBuilder<TStateMachine>());
+            StateMachineDefinition<TStateMachine> definition = (StateMachineDefinition<TStateMachine>)definitionBuilder(new StateMachineBuilder<TStateMachine>());
+
+            services.AddSingleton(definition);
+            services.AddScoped<Resolver<TStateMachine>>();
 
             foreach (var stateMachineComponent in definition.Values
                 .Select(transition =>
@@ -52,8 +54,6 @@ namespace PSIBR.Liminality.Extensions.DependencyInjection
             {
                 services.AddScoped(stateMachineComponent);
             }
-
-            services.AddSingleton<StateMachineDefinition<TStateMachine>>(definition);
         }
     }
 }

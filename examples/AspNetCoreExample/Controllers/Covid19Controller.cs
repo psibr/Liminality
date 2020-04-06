@@ -26,14 +26,10 @@ namespace AspNetCoreExample.Controllers
         public SARSCoV2AssayFactory Covid19AssayFactory { get; }
 
         [HttpPost]
-        public async ValueTask<IActionResult> PostAsync(SARSCoV2Assay.BiologicalSequenceSample sample, CancellationToken cancellationToken = default)
+        public IActionResult Post(SARSCoV2Assay.BiologicalSequenceSample sample)
         {
             var covid19Assay = Covid19AssayFactory.Create(sample.Id);
-            var resultValueTask = covid19Assay.SignalAsync(sample, new SignalOptions(throwWhenTransitionNotFound: true), cancellationToken);
-            
-            if(!resultValueTask.IsCompletedSuccessfully) await resultValueTask;
-
-            ISignalResult result = resultValueTask.Result;
+            var result = covid19Assay.Signal(sample);
 
             return result switch
             {

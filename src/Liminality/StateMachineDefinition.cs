@@ -3,7 +3,8 @@ using System.Collections.Generic;
 
 namespace PSIBR.Liminality
 {
-    public class StateMachineDefinition<TStateMachine> : StateMachineDefinition where TStateMachine : StateMachine<TStateMachine>
+    public class StateMachineDefinition<TStateMachine> : StateMachineDefinition
+    where TStateMachine : StateMachine<TStateMachine>
     {
         public StateMachineDefinition(Type initialState) : base(initialState)
         {

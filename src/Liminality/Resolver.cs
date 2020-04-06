@@ -2,30 +2,35 @@
 
 namespace PSIBR.Liminality
 {
-    public class Resolver : IDisposable
+
+    public class Resolver<TStateMachine>
+        : IDisposable
+    where TStateMachine : StateMachine<TStateMachine>
     {
         private readonly IServiceProvider _serviceProvider;
+        private readonly StateMachineDefinition _stateMachineDefinition;
 
-        public Resolver(IServiceProvider serviceProvider)
+        public Resolver(IServiceProvider serviceProvider, StateMachineDefinition<TStateMachine> stateMachineDefinition)
         {
             _serviceProvider = serviceProvider;
+            _stateMachineDefinition = stateMachineDefinition;
         }
 
-        public TransitionResolution<TSignal>? ResolveTransition<TSignal>(StateMachineDefinition definition, Type stateType)
+        public TransitionResolution<TStateMachine, TSignal>? ResolveTransition<TSignal>(Type stateType)
         where TSignal : class, new()
         {
-            if(!definition.TryGetValue(new StateMachineDefinition.Input(stateType: stateType, signalType: typeof(TSignal)), out var transition))
+            if (!_stateMachineDefinition.TryGetValue(new StateMachineDefinition.Input(stateType: stateType, signalType: typeof(TSignal)), out var transition))
                 return default;
 
             IPrecondition<TSignal>? precondition = !(transition.PreconditionType is null)
-                ? _serviceProvider.GetService(transition.PreconditionType) as IPrecondition<TSignal> 
+                ? _serviceProvider.GetService(transition.PreconditionType) as IPrecondition<TSignal>
                 : null;
-                
+
             var state = _serviceProvider.GetService(transition.NewStateType);
 
-            if(state is null) throw new Exception($"Failed to resolve state: {transition.NewStateType.AssemblyQualifiedName}.");
+            if (state is null) throw new Exception($"Failed to resolve state: {transition.NewStateType.AssemblyQualifiedName}.");
 
-            return new TransitionResolution<TSignal>(transition, precondition, state);
+            return new TransitionResolution<TStateMachine, TSignal>(transition, precondition, state);
         }
 
         void IDisposable.Dispose()
@@ -33,8 +38,9 @@ namespace PSIBR.Liminality
         }
     }
 
-    public class TransitionResolution<TSignal>
-        where TSignal : class, new()
+    public class TransitionResolution<TStateMachine, TSignal>
+    where TStateMachine : StateMachine<TStateMachine>
+    where TSignal : class, new()
     {
         public StateMachineDefinition.Transition Transition { get; }
 
@@ -42,14 +48,14 @@ namespace PSIBR.Liminality
 
         public object State;
 
-        public ISignalHandler<TSignal>? Handler;
+        public ISignalHandler<TStateMachine, TSignal>? Handler;
 
         public TransitionResolution(StateMachineDefinition.Transition transition, IPrecondition<TSignal>? precondition, object state)
         {
             Transition = transition;
             Precondition = precondition;
             State = state;
-            Handler = state as ISignalHandler<TSignal>;
+            Handler = state as ISignalHandler<TStateMachine, TSignal>;
         }
     }
 }

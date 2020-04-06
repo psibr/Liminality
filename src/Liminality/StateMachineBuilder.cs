@@ -2,7 +2,9 @@
 
 namespace PSIBR.Liminality
 {
-    public class StateMachineBuilder<TStateMachine> : StateMachineBuilder where TStateMachine : StateMachine<TStateMachine>
+    public class StateMachineBuilder<TStateMachine> 
+        : StateMachineBuilder
+    where TStateMachine : StateMachine<TStateMachine>
     {
         public StateMachineBuilder() 
             : base((Type initialState) => new StateMachineDefinition<TStateMachine>(initialState))
@@ -114,6 +116,4 @@ namespace PSIBR.Liminality
                 => _stateBuilder.AddTransition<TState, TSignal, TNewState>();
         }
     }
-
-
 }

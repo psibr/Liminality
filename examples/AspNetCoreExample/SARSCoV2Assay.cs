@@ -1,11 +1,8 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using PSIBR.Liminality;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using PSIBR.Liminality;
 
 namespace AspNetCoreExample
 {
@@ -13,19 +10,19 @@ namespace AspNetCoreExample
     {
         private readonly StateMachineFactory _stateMachineFactory;
 
-        public SARSCoV2AssayFactory(StateMachineFactory stateMachineFactory) 
+        public SARSCoV2AssayFactory(StateMachineFactory stateMachineFactory)
         {
             _stateMachineFactory = stateMachineFactory;
         }
 
         public StateMachineScope<SARSCoV2Assay> CreateScoped(string id)
         {
-            return _stateMachineFactory.CreateScopedStateMachine<SARSCoV2Assay>((resolver, definition) => new SARSCoV2Assay(id, resolver, definition));
+            return _stateMachineFactory.CreateScopedStateMachine<SARSCoV2Assay>(resolver => new SARSCoV2Assay(id, resolver));
         }
 
         public SARSCoV2Assay Create(string id)
         {
-            return _stateMachineFactory.CreateStateMachine<SARSCoV2Assay>((resolver, definition) => new SARSCoV2Assay(id, resolver, definition));
+            return _stateMachineFactory.CreateStateMachine<SARSCoV2Assay>(resolver => new SARSCoV2Assay(id, resolver));
         }
     }
 
@@ -35,23 +32,25 @@ namespace AspNetCoreExample
             string id,
 
             /* Here you could add a repository or eventstream as a dependency */
-            Resolver resolver, StateMachineDefinition<SARSCoV2Assay> stateMachineDefinition)
-            : base(resolver, stateMachineDefinition)
+            Resolver<SARSCoV2Assay> resolver)
+            : base(resolver)
         {
         }
 
         protected object State { get; private set; } = new Ready();
 
-        protected override ValueTask<object> LoadStateAsync(CancellationToken cancellationToken = default)
+        public ISignalResult Signal<TSignal>(TSignal signal)
+        where TSignal : class, new()
         {
-            return new ValueTask<object>(State);
-        }
+            var valueTask = base.SignalAsync<TSignal>(
+                signal,
+                cancellationToken => new ValueTask<object>(State),
+                (state, cancellationToken) => { State = state; return new ValueTask(); },
+                default);
 
-        protected override ValueTask PersistStateAsync(object state, CancellationToken cancellationToken = default)
-        {
-            State = state;
-
-            return new ValueTask();
+            if (valueTask.IsCompletedSuccessfully) return valueTask.Result;
+            else if (valueTask.IsFaulted) throw valueTask.AsTask().Exception;
+            else throw new NotSupportedException("This state machine cannot execute async");
         }
 
         /// <summary>
@@ -68,7 +67,7 @@ namespace AspNetCoreExample
         {
             [Required]
             public string Id { get; set; }
-            
+
             public Sequence Inst { get; set; }
 
             public class Sequence
@@ -79,14 +78,14 @@ namespace AspNetCoreExample
         }
 
         public class Analyzing
-            : ISignalHandler<BiologicalSequenceSample>
+            : ISignalHandler<SARSCoV2Assay, BiologicalSequenceSample>
         {
             /// <summary>
             /// Test for SARS-CoV-2
             /// </summary>
             /// <param name="sample"></param>
             /// <param name="cancellationToken"></param>
-            public ValueTask<ISignalResult> InvokeAsync(SignalContext context, BiologicalSequenceSample sample, CancellationToken cancellationToken = default)
+            public ValueTask<ISignalResult> InvokeAsync(SignalContext<SARSCoV2Assay> context, BiologicalSequenceSample sample, CancellationToken cancellationToken = default)
             {
                 var result = new Analysis
                 {
@@ -95,7 +94,7 @@ namespace AspNetCoreExample
                     EGene = sample.Inst.Data.Contains("E")
                 };
 
-                return context.Self.SignalAsync(result, cancellationToken);
+                return new ValueTask<ISignalResult>(context.Self.Signal(result));
             }
         }
 
@@ -109,21 +108,21 @@ namespace AspNetCoreExample
         }
 
         public class Evaluating
-            : ISignalHandler<Analysis>
+            : ISignalHandler<SARSCoV2Assay, Analysis>
         {
-            public ValueTask<ISignalResult> InvokeAsync(SignalContext context, Analysis analysis, CancellationToken cancellationToken = default)
+            public ValueTask<ISignalResult> InvokeAsync(SignalContext<SARSCoV2Assay> context, Analysis analysis, CancellationToken cancellationToken = default)
             {
                 if (analysis.Orf1Gene && analysis.NGene && analysis.EGene)
                 {
-                    return context.Self.SignalAsync(new PositiveEvaluation(), cancellationToken);
+                    return new ValueTask<ISignalResult>(context.Self.Signal(new PositiveEvaluation()));
                 }
                 else if (!analysis.Orf1Gene && !analysis.NGene && !analysis.EGene)
                 {
-                    return context.Self.SignalAsync(new NegativeEvaluation(), cancellationToken);
+                    return new ValueTask<ISignalResult>(context.Self.Signal(new NegativeEvaluation()));
                 }
                 else
                 {
-                    return context.Self.SignalAsync(new InconclusiveEvaluation(), cancellationToken);
+                    return new ValueTask<ISignalResult>(context.Self.Signal(new InconclusiveEvaluation()));
                 }
 
             }
@@ -143,7 +142,7 @@ namespace AspNetCoreExample
 
         public class EmptySequenceInstException : Exception
         {
-            
+
         }
     }
 }
