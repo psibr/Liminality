@@ -7,11 +7,7 @@ using PSIBR.Liminality;
 namespace AspNetCoreExample
 {    public class SARSCoV2Assay : StateMachine<SARSCoV2Assay>
     {
-        public SARSCoV2Assay(
-            string id,
-
-            /* Here you could add a repository or eventstream as a dependency */
-            Engine<SARSCoV2Assay> engine)
+        public SARSCoV2Assay(Engine<SARSCoV2Assay> engine, string id)
             : base(engine)
         {
         }
