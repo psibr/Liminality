@@ -14,7 +14,7 @@ namespace AspNetCoreExample
 
         protected object State { get; private set; } = new Ready();
 
-        public ISignalResult Signal<TSignal>(TSignal signal)
+        public AggregateSignalResult Signal<TSignal>(TSignal signal)
         where TSignal : class, new()
         {
             var valueTask = base.SignalAsync<TSignal>(
@@ -53,6 +53,18 @@ namespace AspNetCoreExample
 
         }
 
+        public class BiologicalSequenceIsntEmpty
+            : IPrecondition<BiologicalSequenceSample>
+        {
+            public ValueTask<AggregateException> CheckAsync(BiologicalSequenceSample signal, CancellationToken cancellationToken = default)
+            {
+                if(!string.IsNullOrWhiteSpace(signal.Inst.Data))
+                    return new ValueTask<AggregateException>();
+                
+                return new ValueTask<AggregateException>(new AggregateException(new EmptySequenceInstException()));
+            }
+        }
+
         public class Analyzing
             : ISignalHandler<SARSCoV2Assay, BiologicalSequenceSample>
         {
@@ -61,7 +73,7 @@ namespace AspNetCoreExample
             /// </summary>
             /// <param name="sample"></param>
             /// <param name="cancellationToken"></param>
-            public ValueTask<ISignalResult> InvokeAsync(SignalContext<SARSCoV2Assay> context, BiologicalSequenceSample sample, CancellationToken cancellationToken = default)
+            public ValueTask<AggregateSignalResult> InvokeAsync(SignalContext<SARSCoV2Assay> context, BiologicalSequenceSample sample, CancellationToken cancellationToken = default)
             {
                 var result = new Analysis
                 {
@@ -70,7 +82,7 @@ namespace AspNetCoreExample
                     EGene = sample.Inst.Data.Contains("E")
                 };
 
-                return new ValueTask<ISignalResult>(context.Self.Signal(result));
+                return new ValueTask<AggregateSignalResult>(context.Self.Signal(result));
             }
         }
 
@@ -86,19 +98,19 @@ namespace AspNetCoreExample
         public class Evaluating
             : ISignalHandler<SARSCoV2Assay, Analysis>
         {
-            public ValueTask<ISignalResult> InvokeAsync(SignalContext<SARSCoV2Assay> context, Analysis analysis, CancellationToken cancellationToken = default)
+            public ValueTask<AggregateSignalResult> InvokeAsync(SignalContext<SARSCoV2Assay> context, Analysis analysis, CancellationToken cancellationToken = default)
             {
                 if (analysis.Orf1Gene && analysis.NGene && analysis.EGene)
                 {
-                    return new ValueTask<ISignalResult>(context.Self.Signal(new PositiveEvaluation()));
+                    return new ValueTask<AggregateSignalResult>(context.Self.Signal(new PositiveEvaluation()));
                 }
                 else if (!analysis.Orf1Gene && !analysis.NGene && !analysis.EGene)
                 {
-                    return new ValueTask<ISignalResult>(context.Self.Signal(new NegativeEvaluation()));
+                    return new ValueTask<AggregateSignalResult>(context.Self.Signal(new NegativeEvaluation()));
                 }
                 else
                 {
-                    return new ValueTask<ISignalResult>(context.Self.Signal(new InconclusiveEvaluation()));
+                    return new ValueTask<AggregateSignalResult>(context.Self.Signal(new InconclusiveEvaluation()));
                 }
 
             }

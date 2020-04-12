@@ -29,10 +29,10 @@ namespace AspNetCoreExample
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
-        {            
+        {
             services.AddStateMachine<SARSCoV2Assay>(definitionBuilder => definitionBuilder
                 .StartsIn<Ready>()
-                .For<Ready>().On<BiologicalSequenceSample>().MoveTo<Analyzing>()
+                .For<Ready>().On<BiologicalSequenceSample>().When<BiologicalSequenceIsntEmpty>().MoveTo<Analyzing>()
                 .For<Analyzing>().On<Analysis>().MoveTo<Evaluating>()
                 .For<Evaluating>().On<InconclusiveEvaluation>().MoveTo<Inconclusive>()
                 .For<Evaluating>().On<NegativeEvaluation>().MoveTo<Negative>()
@@ -41,10 +41,10 @@ namespace AspNetCoreExample
 
             services.AddControllers();
 
-                services.AddSwaggerGen(c =>
-                {
-                    c.SwaggerDoc("openapi", new OpenApiInfo { Title = "Liminality Examples", Version = "v1" });
-                });
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("openapi", new OpenApiInfo { Title = "Liminality Examples", Version = "v1" });
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

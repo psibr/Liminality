@@ -7,7 +7,7 @@ namespace PSIBR.Liminality
     where TStateMachine : StateMachine<TStateMachine>
     where TSignal : class
     {
-        ValueTask<ISignalResult?> InvokeAsync(SignalContext<TStateMachine> context, TSignal signal, CancellationToken cancellationToken = default);
+        ValueTask<AggregateSignalResult?> InvokeAsync(SignalContext<TStateMachine> context, TSignal signal, CancellationToken cancellationToken = default);
     }
 
     public class SignalContext<TStateMachine>
@@ -21,7 +21,7 @@ namespace PSIBR.Liminality
         }
 
         public TStateMachine Self { get; }
-
+        
         public object StartingState { get; }
 
         public object NewState { get; }

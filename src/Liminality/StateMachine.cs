@@ -14,7 +14,7 @@ namespace PSIBR.Liminality
             _engine = engine;
         }
 
-        protected ValueTask<ISignalResult> SignalAsync<TSignal>(
+        protected ValueTask<AggregateSignalResult> SignalAsync<TSignal>(
             TSignal signal,
             Func<CancellationToken, ValueTask<object>> loadStateFunc,
             Func<object, CancellationToken, ValueTask> persistStateFunc,

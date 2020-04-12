@@ -113,7 +113,7 @@ namespace PSIBR.Liminality
 
             public StateBuilder MoveTo<TNewState>()
                 where TNewState : class
-                => _stateBuilder.AddTransition<TState, TSignal, TNewState>();
+                => _stateBuilder.AddTransition<TState, TSignal, TPrecondition, TNewState>();
         }
     }
 }

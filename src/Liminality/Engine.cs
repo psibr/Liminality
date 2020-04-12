@@ -1,11 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace PSIBR.Liminality
 {
-
-    public class Engine<TStateMachine>
+    public sealed class Engine<TStateMachine>
     where TStateMachine : StateMachine<TStateMachine>
     {
         private readonly IServiceProvider _serviceProvider;
@@ -17,7 +19,7 @@ namespace PSIBR.Liminality
             _stateMachineDefinition = stateMachineDefinition;
         }
 
-        public TransitionResolution<TSignal>? ResolveTransition<TSignal>(Type stateType)
+        private TransitionResolution<TSignal>? ResolveTransition<TSignal>(Type stateType)
         where TSignal : class, new()
         {
             if (!_stateMachineDefinition.TryGetValue(new StateMachineDefinition.Input(stateType: stateType, signalType: typeof(TSignal)), out var transition))
@@ -34,14 +36,7 @@ namespace PSIBR.Liminality
             return new TransitionResolution<TSignal>(transition, precondition, state);
         }
 
-        public TStateMachine CreateStateMachine(Func<Engine<TStateMachine>, TStateMachine> factoryFunc)
-        {
-            var stateMachine = factoryFunc(this);
-
-            return stateMachine;
-        }
-
-        public async ValueTask<ISignalResult> SignalAsync<TSignal>(
+        public async ValueTask<AggregateSignalResult> SignalAsync<TSignal>(
             TStateMachine self,
             TSignal signal,
             Func<CancellationToken, ValueTask<object>> loadStateFunc,
@@ -50,13 +45,13 @@ namespace PSIBR.Liminality
         where TSignal : class, new()
         {
             var loadStateValueTask = loadStateFunc(cancellationToken);
-            if(!loadStateValueTask.IsCompletedSuccessfully) await loadStateValueTask.ConfigureAwait(false);
+            if (!loadStateValueTask.IsCompletedSuccessfully) await loadStateValueTask.ConfigureAwait(false);
 
-            var startingState = loadStateValueTask.Result;
+            object startingState = loadStateValueTask.Result;
 
             var resolution = ResolveTransition<TSignal>(startingState.GetType());
 
-            if (resolution is null) return new TransitionNotFoundResult(startingState, signal);
+            if (resolution is null) return CreateResult(new TransitionNotFoundResult(startingState, signal));
 
             if (!(resolution.Precondition is null))
             {
@@ -64,41 +59,51 @@ namespace PSIBR.Liminality
                 // TODO: should catch any exceptions here
                 if (!preconditionValueTask.IsCompletedSuccessfully) await preconditionValueTask.ConfigureAwait(false);
 
-                if (!(preconditionValueTask.Result is null)) return new RejectedByPreconditionResult(startingState, signal, resolution.Transition, preconditionValueTask.Result);
+                if (!(preconditionValueTask.Result is null)) return CreateResult(new RejectedByPreconditionResult(startingState, signal, resolution.Transition, preconditionValueTask.Result));
             }
 
             var persistStateValueTask = persistStateFunc(resolution.State, cancellationToken);
-            if(!persistStateValueTask.IsCompletedSuccessfully) await persistStateValueTask.ConfigureAwait(false);
+            if (!persistStateValueTask.IsCompletedSuccessfully) await persistStateValueTask.ConfigureAwait(false);
 
-            if (resolution.Handler is null) return new TransitionedResult(startingState, resolution.State);
-            
+            if (resolution.Handler is null) return CreateResult(new TransitionedResult(startingState, resolution.State));
+
             var handlerValueTask = resolution.Handler.InvokeAsync(new SignalContext<TStateMachine>(self, startingState, resolution.State), signal, cancellationToken);
 
             // TODO: should catch any exceptions here
             if (!handlerValueTask.IsCompletedSuccessfully) await handlerValueTask.ConfigureAwait(false);
 
             // replace with a multiple transition result?
-            return new TransitionedResult(startingState, resolution.State);
+
+            return CreateResult(new TransitionedResult(startingState, resolution.State), handlerValueTask.Result);
+
+            AggregateSignalResult CreateResult(ISignalResult result, AggregateSignalResult? next = default)
+            {
+                var currentResult = new List<ISignalResult> { result };
+
+                if(next is null) return new AggregateSignalResult(currentResult);
+                
+                return new AggregateSignalResult(next.Concat(currentResult).ToList());         
+            }
         }
 
-            public class TransitionResolution<TSignal>
-            where TSignal : class, new()
+        private sealed class TransitionResolution<TSignal>
+        where TSignal : class, new()
+        {
+            public StateMachineDefinition.Transition Transition { get; }
+
+            public IPrecondition<TSignal>? Precondition;
+
+            public object State;
+
+            public ISignalHandler<TStateMachine, TSignal>? Handler;
+
+            public TransitionResolution(StateMachineDefinition.Transition transition, IPrecondition<TSignal>? precondition, object state)
             {
-                public StateMachineDefinition.Transition Transition { get; }
-
-                public IPrecondition<TSignal>? Precondition;
-
-                public object State;
-
-                public ISignalHandler<TStateMachine, TSignal>? Handler;
-
-                public TransitionResolution(StateMachineDefinition.Transition transition, IPrecondition<TSignal>? precondition, object state)
-                {
-                    Transition = transition;
-                    Precondition = precondition;
-                    State = state;
-                    Handler = state as ISignalHandler<TStateMachine, TSignal>;
-                }
+                Transition = transition;
+                Precondition = precondition;
+                State = state;
+                Handler = state as ISignalHandler<TStateMachine, TSignal>;
             }
+        }
     }
 }

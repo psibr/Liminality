@@ -1,8 +1,42 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace PSIBR.Liminality
 {
     public interface ISignalResult { }
+
+    public class AggregateSignalResult 
+        : IReadOnlyList<ISignalResult>
+    {
+        public AggregateSignalResult(IReadOnlyList<ISignalResult> resultStack)
+        {
+            if(resultStack is null) throw new ArgumentNullException(nameof(resultStack));
+            if(resultStack.Count == 0) throw new ArgumentException("Cannot be empty", nameof(resultStack));
+
+            InnerResults = resultStack;
+
+            InnerResult = InnerResults[0];
+        }
+
+        public ISignalResult InnerResult { get; }
+
+        public IReadOnlyList<ISignalResult> InnerResults { get; }
+
+        public int Count => InnerResults.Count;
+
+        public ISignalResult this[int index] => InnerResults[index];
+
+        public IEnumerator<ISignalResult> GetEnumerator()
+        {
+            return InnerResults.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return ((IEnumerable)InnerResults).GetEnumerator();
+        }
+    }
 
     public class TransitionedResult : ISignalResult
     {

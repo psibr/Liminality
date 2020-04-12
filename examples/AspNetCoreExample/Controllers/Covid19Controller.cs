@@ -23,7 +23,7 @@ namespace AspNetCoreExample.Controllers
             var covid19Assay = new SARSCoV2Assay(engine, sample.Id);
             var result = covid19Assay.Signal(sample);
 
-            return result switch
+            return result.InnerResult switch
             {
                 TransitionedResult transitioned => transitioned.NewState switch
                 {
