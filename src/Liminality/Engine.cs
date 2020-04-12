@@ -55,9 +55,18 @@ namespace PSIBR.Liminality
 
             if (!(resolution.Precondition is null))
             {
-                var preconditionValueTask = resolution.Precondition.CheckAsync(signal, cancellationToken);
-                // TODO: should catch any exceptions here
-                if (!preconditionValueTask.IsCompletedSuccessfully) await preconditionValueTask.ConfigureAwait(false);
+                ValueTask<AggregateException?> preconditionValueTask;
+
+                try
+                {
+                    preconditionValueTask = resolution.Precondition.CheckAsync(signal, cancellationToken);
+
+                    if (!preconditionValueTask.IsCompletedSuccessfully) await preconditionValueTask.ConfigureAwait(false);
+                }
+                catch(Exception ex)
+                {
+                    return CreateResult(new ExceptionThrownByPreconditionResult(startingState, signal, resolution.Transition, ex));
+                }
 
                 if (!(preconditionValueTask.Result is null)) return CreateResult(new RejectedByPreconditionResult(startingState, signal, resolution.Transition, preconditionValueTask.Result));
             }

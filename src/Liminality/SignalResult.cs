@@ -74,6 +74,33 @@ namespace PSIBR.Liminality
         public AggregateException PreconditionExceptions { get; }
     }
 
+    public class ExceptionThrownByPreconditionResult : ISignalResult
+    {
+        public ExceptionThrownByPreconditionResult(
+            object startingState,
+            object signal,
+            StateMachineDefinition.Transition transition,
+            Exception preconditionException)
+        {
+            StartingState = startingState;
+            Signal = signal;
+            Transition = transition;
+            
+            if(preconditionException is AggregateException aggregateException)
+                PreconditionExceptions = aggregateException;
+            else
+                PreconditionExceptions = new AggregateException(preconditionException);
+        }
+
+        public object StartingState { get; }
+
+        public object Signal { get; }
+
+        public StateMachineDefinition.Transition Transition { get; }
+
+        public AggregateException PreconditionExceptions { get; }
+    }
+
     public class TransitionNotFoundResult : ISignalResult
     {
         public TransitionNotFoundResult(object startingState, object signal)
