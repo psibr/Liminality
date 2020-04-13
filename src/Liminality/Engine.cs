@@ -88,7 +88,7 @@ namespace PSIBR.Liminality
             }
             catch (Exception ex)
             {
-                return CreateResult(new ExceptionThrownByHandlerResult(startingState, signal, resolution.Transition, ex));
+                return CreateResult(new ExceptionThrownByHandlerResult(startingState, signal, resolution.State, ex));
             }
 
             return CreateResult(new TransitionedResult(startingState, resolution.State), handlerValueTask.Result);

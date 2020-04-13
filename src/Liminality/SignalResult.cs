@@ -79,12 +79,12 @@ namespace PSIBR.Liminality
         public ExceptionThrownByHandlerResult(
             object startingState,
             object signal,
-            StateMachineDefinition.Transition transition,
+            object newState,
             Exception exception)
         {
             StartingState = startingState;
             Signal = signal;
-            Transition = transition;
+            NewState = newState;
             
             if(exception is AggregateException aggregateException)
                 HandlerExceptions = aggregateException;
@@ -96,7 +96,7 @@ namespace PSIBR.Liminality
 
         public object Signal { get; }
 
-        public StateMachineDefinition.Transition Transition { get; }
+        public object NewState { get; }
 
         public AggregateException HandlerExceptions { get; }
     }
