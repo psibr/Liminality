@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -63,7 +62,7 @@ namespace PSIBR.Liminality
 
                     if (!preconditionValueTask.IsCompletedSuccessfully) await preconditionValueTask.ConfigureAwait(false);
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     return CreateResult(new ExceptionThrownByPreconditionResult(startingState, signal, resolution.Transition, ex));
                 }
@@ -76,12 +75,21 @@ namespace PSIBR.Liminality
 
             if (resolution.Handler is null) return CreateResult(new TransitionedResult(startingState, resolution.State));
 
-            var handlerValueTask = resolution.Handler.InvokeAsync(new SignalContext<TStateMachine>(self, startingState, resolution.State), signal, cancellationToken);
+            ValueTask<AggregateSignalResult?> handlerValueTask;
 
-            // TODO: should catch any exceptions here
-            if (!handlerValueTask.IsCompletedSuccessfully) await handlerValueTask.ConfigureAwait(false);
+            try
+            {
+                handlerValueTask = resolution.Handler.InvokeAsync(
+                    context: new SignalContext<TStateMachine>(self, startingState, resolution.State),
+                    signal,
+                    cancellationToken);
 
-            // replace with a multiple transition result?
+                if (!handlerValueTask.IsCompletedSuccessfully) await handlerValueTask.ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                return CreateResult(new ExceptionThrownByHandlerResult(startingState, signal, resolution.Transition, ex));
+            }
 
             return CreateResult(new TransitionedResult(startingState, resolution.State), handlerValueTask.Result);
 
@@ -89,9 +97,9 @@ namespace PSIBR.Liminality
             {
                 var currentResult = new List<ISignalResult> { result };
 
-                if(next is null) return new AggregateSignalResult(currentResult);
-                
-                return new AggregateSignalResult(next.Concat(currentResult).ToList());         
+                if (next is null) return new AggregateSignalResult(currentResult);
+
+                return new AggregateSignalResult(next.Concat(currentResult).ToList());
             }
         }
 
