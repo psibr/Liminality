@@ -11,7 +11,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
-using PSIBR.Liminality.Extensions.DependencyInjection;
 
 
 namespace AspNetCoreExample
@@ -30,14 +29,8 @@ namespace AspNetCoreExample
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddStateMachine<SARSCoV2Assay>(definitionBuilder => definitionBuilder
-                .StartsIn<Ready>()
-                .For<Ready>().On<BiologicalSequenceSample>().When<BiologicalSequenceIsntEmpty>().MoveTo<Analyzing>()
-                .For<Analyzing>().On<Analysis>().MoveTo<Evaluating>()
-                .For<Evaluating>().On<InconclusiveEvaluation>().MoveTo<Inconclusive>()
-                .For<Evaluating>().On<NegativeEvaluation>().MoveTo<Negative>()
-                .For<Evaluating>().On<PositiveEvaluation>().MoveTo<Positive>()
-                .Build());
+            services.AddSARSCoV2AssayExample();
+            services.AddReverseStringAsExtraStateExample();
 
             services.AddControllers();
 

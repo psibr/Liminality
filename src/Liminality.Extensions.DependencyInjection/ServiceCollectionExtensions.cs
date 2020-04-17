@@ -2,7 +2,7 @@
 using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace PSIBR.Liminality.Extensions.DependencyInjection
+namespace PSIBR.Liminality
 {
     public static class ServiceCollectionExtensions
     {

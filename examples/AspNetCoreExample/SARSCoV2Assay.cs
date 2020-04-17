@@ -2,10 +2,34 @@
 using System.ComponentModel.DataAnnotations;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using PSIBR.Liminality;
 
 namespace AspNetCoreExample
-{    public class SARSCoV2Assay : StateMachine<SARSCoV2Assay>
+{
+    using static AspNetCoreExample.SARSCoV2Assay;
+
+    public static class SARSCoV2AssayExtensions
+    {
+        public static void AddSARSCoV2AssayExample(this IServiceCollection services)
+        {
+            services.AddStateMachine<SARSCoV2Assay>(builder => builder
+                .StartsIn<Ready>()
+                .For<Ready>().On<BiologicalSequenceSample>().When<BiologicalSequenceIsntEmpty>().MoveTo<Analyzing>()
+                .For<Analyzing>().On<Analysis>().MoveTo<Evaluating>()
+                .For<Evaluating>().On<InconclusiveEvaluation>().MoveTo<Inconclusive>()
+                .For<Evaluating>().On<NegativeEvaluation>().MoveTo<Negative>()
+                .For<Evaluating>().On<PositiveEvaluation>().MoveTo<Positive>()
+                .Build());
+        }
+
+        public static SARSCoV2Assay Create(this Engine<SARSCoV2Assay> engine, string id)
+        {
+            return new SARSCoV2Assay(engine, id);
+        }
+    }
+
+    public class SARSCoV2Assay : StateMachine<SARSCoV2Assay>
     {
         public SARSCoV2Assay(Engine<SARSCoV2Assay> engine, string id)
             : base(engine)
@@ -58,9 +82,9 @@ namespace AspNetCoreExample
         {
             public ValueTask<AggregateException> CheckAsync(BiologicalSequenceSample signal, CancellationToken cancellationToken = default)
             {
-                if(!string.IsNullOrWhiteSpace(signal.Inst.Data))
+                if (!string.IsNullOrWhiteSpace(signal.Inst.Data))
                     return new ValueTask<AggregateException>();
-                
+
                 return new ValueTask<AggregateException>(new AggregateException(new EmptySequenceInstException()));
             }
         }

@@ -8,7 +8,6 @@ namespace PSIBR.Liminality
     where TStateMachine : StateMachine<TStateMachine>
     {
         private readonly Engine<TStateMachine> _engine;
-
         protected StateMachine(Engine<TStateMachine> engine)
         {
             _engine = engine;
@@ -23,5 +22,6 @@ namespace PSIBR.Liminality
         {
             return _engine.SignalAsync<TSignal>((TStateMachine)this, signal, loadStateFunc, persistStateFunc, cancellationToken);
         }
+
     }
 }

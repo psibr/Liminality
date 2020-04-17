@@ -20,7 +20,8 @@ namespace AspNetCoreExample.Controllers
         [HttpPost]
         public IActionResult Post(SARSCoV2Assay.BiologicalSequenceSample sample, [FromServices] Engine<SARSCoV2Assay> engine)
         {
-            var covid19Assay = new SARSCoV2Assay(engine, sample.Id);
+            var covid19Assay = engine.Create(sample.Id);
+            
             var result = covid19Assay.Signal(sample);
 
             return result.InnerResult switch
