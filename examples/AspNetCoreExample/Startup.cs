@@ -13,9 +13,9 @@ using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 
 
-namespace AspNetCoreExample
+namespace Samples
 {
-    using static SARSCoV2Assay;
+    using static Covid19TestKit;
 
     public class Startup
     {
@@ -29,8 +29,8 @@ namespace AspNetCoreExample
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddSARSCoV2AssayExample();
-            services.AddReverseStringAsExtraStateExample();
+            services.AddCovid19TestKitSample();
+            services.AddReverseStringAsExtraStateSample();
 
             services.AddControllers();
 

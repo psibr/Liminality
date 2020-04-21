@@ -6,13 +6,13 @@ using Microsoft.Extensions.DependencyInjection;
 using PSIBR.Liminality;
 
 
-namespace AspNetCoreExample
+namespace Samples
 {
-    using static AspNetCoreExample.ReverseStringAsExtraState;
+    using static Samples.ReverseStringAsExtraState;
 
     public static class ReverseStringAsExtraStateExtensions
     {
-        public static void AddReverseStringAsExtraStateExample(this IServiceCollection services)
+        public static void AddReverseStringAsExtraStateSample(this IServiceCollection services)
         {
             services.AddStateMachine<ReverseStringAsExtraState>(builder => builder
                 .StartsIn<Idle>()
@@ -32,13 +32,13 @@ namespace AspNetCoreExample
     {
         public ReverseStringAsExtraState(Engine<ReverseStringAsExtraState> engine) : base(engine) { }
 
-        public string Input { get; private set;}
+        public string Input { get; private set;} = string.Empty;
 
-        public string Output { get; private set;}
+        public string? Output { get; private set;}
 
         public object State { get; private set; } = new Idle();
 
-        public async ValueTask<AggregateSignalResult> SignalAsync<TSignal>(TSignal signal, CancellationToken cancellationToken = default)
+        public async ValueTask<AggregateSignalResult?> SignalAsync<TSignal>(TSignal signal, CancellationToken cancellationToken = default)
         where TSignal : class, new()
         {
             var valueTask = base.SignalAsync<TSignal>(
@@ -50,7 +50,7 @@ namespace AspNetCoreExample
                     // We could also do this in any handler by assigning to the state machine
                     // and saving it here.
                     if(signal is LoadValues loadValuesSignal)
-                        Input = loadValuesSignal.Input;
+                        Input = loadValuesSignal.Input ?? string.Empty;
                     else if (signal is ReportResult resultReport)
                         Output = resultReport.Result;
                     
@@ -78,10 +78,10 @@ namespace AspNetCoreExample
                 }
             }
             private static string ReverseGraphemeClusters(string s) {
-                return string.Join("", GraphemeClusters(s).Reverse().ToArray());
+                return string.Join(string.Empty, GraphemeClusters(s).Reverse().ToArray());
             }
 
-            public ValueTask<AggregateSignalResult> InvokeAsync(
+            public ValueTask<AggregateSignalResult?> InvokeAsync(
                 SignalContext<ReverseStringAsExtraState> context,
                 StartProcessing signal,
                 CancellationToken cancellationToken = default)
@@ -94,14 +94,14 @@ namespace AspNetCoreExample
 
         public class LoadValues
         {
-            public string Input { get; set; }
+            public string? Input { get; set; }
         }
 
         public class StartProcessing { }
 
         public class ReportResult 
         {
-            public string Result { get; set; }
+            public string? Result { get; set; }
         }
 
     }

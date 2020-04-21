@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using PSIBR.Liminality;
 
-namespace AspNetCoreExample.Controllers
+namespace Samples.Controllers
 {
     [ApiController]
     [Route("assays/[controller]")]
@@ -18,9 +18,9 @@ namespace AspNetCoreExample.Controllers
         }
 
         [HttpPost]
-        public IActionResult Post(SARSCoV2Assay.BiologicalSequenceSample sample, [FromServices] Engine<SARSCoV2Assay> engine)
+        public IActionResult Post(Covid19TestKit.BiologicalSequenceSample sample, [FromServices] Engine<Covid19TestKit> engine)
         {
-            var covid19Assay = engine.Create(sample.Id);
+            var covid19Assay = engine.Create();
             
             var result = covid19Assay.Signal(sample);
 
@@ -28,14 +28,14 @@ namespace AspNetCoreExample.Controllers
             {
                 TransitionedResult transitioned => transitioned.NewState switch
                 {
-                    SARSCoV2Assay.Positive _ => Ok(1),
-                    SARSCoV2Assay.Negative _ => Ok(-1),
-                    SARSCoV2Assay.Inconclusive _ => Ok(0),
+                    Covid19TestKit.Positive _ => Ok(1),
+                    Covid19TestKit.Negative _ => Ok(-1),
+                    Covid19TestKit.Inconclusive _ => Ok(0),
                     _ => throw new Exception("Assesment ended prematurely")
                 },
                 RejectedByPreconditionResult rejection => rejection.PreconditionExceptions.InnerException switch
                 {
-                    SARSCoV2Assay.EmptySequenceInstException _ => Problem(
+                    Covid19TestKit.EmptySequenceInstException _ => Problem(
                         type: "psibr:liminality:examples:sars-cov-2-assay:sequence-empty",
                         title: "The sequence cannot be empty.",
                         instance: $"psibr:liminality:examples:sars-cov-2-assay:sequence-empty:{sample.Id ?? ""}",

@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using PSIBR.Liminality;
 
-namespace AspNetCoreExample.Controllers
+namespace Samples.Controllers
 {
     [ApiController]
     [Route("[controller]")]
@@ -27,7 +27,7 @@ namespace AspNetCoreExample.Controllers
             await stateMachine.SignalAsync(values);
 
             //kick off the machine's processing
-            await stateMachine.SignalAsync(new ReverseStringAsExtraState.StartProcessing());
+            var result = await stateMachine.SignalAsync(new ReverseStringAsExtraState.StartProcessing());
 
             // in this example state was stored on the machine instance
             return Ok(stateMachine.Output);
