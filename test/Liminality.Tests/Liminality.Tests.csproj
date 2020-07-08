@@ -19,9 +19,8 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Pose" Version="1.2.1" />
 
-    
+    <PackageReference Include="Pose" Version="1.2.1" />
     <PackageReference Include="Lamar" Version="4.2.1" />
   </ItemGroup>
 
