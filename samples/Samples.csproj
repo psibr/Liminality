@@ -6,7 +6,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\src\Liminality.Extensions.DependencyInjection\Liminality.Extensions.DependencyInjection.csproj" />
     <ProjectReference Include="..\src\Liminality\Liminality.csproj" />
   </ItemGroup>
 
