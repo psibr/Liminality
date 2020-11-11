@@ -58,10 +58,7 @@ namespace Samples
                     
                     return new ValueTask();
                 },
-                default);
-
-            // handle synchronyously ONLY as an example of this capability
-            if (valueTask.IsCompletedSuccessfully) return valueTask.Result;
+                cancellationToken);
 
             return await valueTask.ConfigureAwait(false);
         }
