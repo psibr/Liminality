@@ -27,7 +27,7 @@ namespace PSIBR.Liminality.Tests
                 x.AddTransient<BasicStateMachine>();
             });
 
-            var engine = container.GetService<LiminalEngine>();
+            var engine = container.GetService<BasicStateMachine>();
 
             Assert.NotNull(engine);
         }
@@ -43,10 +43,12 @@ namespace PSIBR.Liminality.Tests
                     .For<InProgress>().On<Finish>().MoveTo<Finished>()
                     .Build());
 
-                x.AddTransient<BasicStateMachine>();
+                x.AddScoped<Factory>();
             });
 
-            var basicStateMachine = container.GetRequiredService<BasicStateMachine>();
+            var factory = container.GetRequiredService<Factory>();
+
+            var basicStateMachine = factory.Create();
 
             Assert.NotNull(basicStateMachine);
         }
@@ -54,6 +56,20 @@ namespace PSIBR.Liminality.Tests
 
     public class BasicStateMachine : StateMachine<BasicStateMachine>
     {
+        public class Factory
+        {
+            private readonly LiminalEngine _engine;
+            private readonly StateMachineDefinition<BasicStateMachine> _definition;
+
+            public Factory(LiminalEngine engine, StateMachineDefinition<BasicStateMachine> definition)
+            {
+                _engine = engine;
+                _definition = definition;
+            }
+
+            public BasicStateMachine Create() => new(_engine, _definition);
+        }
+
         public BasicStateMachine(LiminalEngine engine, StateMachineDefinition<BasicStateMachine> definition) : base(engine,definition)
         {
         }
