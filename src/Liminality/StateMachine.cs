@@ -7,11 +7,14 @@ namespace PSIBR.Liminality
     public abstract class StateMachine<TStateMachine>
     where TStateMachine : StateMachine<TStateMachine>
     {
-        private readonly Engine<TStateMachine> _engine;
-        protected StateMachine(Engine<TStateMachine> engine)
+        private readonly LiminalEngine _engine;
+        protected StateMachine(LiminalEngine engine, StateMachineDefinition<TStateMachine> definition)
         {
             _engine = engine;
+            Definition = definition;
         }
+
+        public StateMachineDefinition<TStateMachine> Definition { get; }
 
         protected ValueTask<AggregateSignalResult> SignalAsync<TSignal>(
             TSignal signal,
@@ -20,8 +23,7 @@ namespace PSIBR.Liminality
             CancellationToken cancellationToken = default)
         where TSignal : class, new()
         {
-            return _engine.SignalAsync<TSignal>((TStateMachine)this, signal, loadStateFunc, persistStateFunc, cancellationToken);
+            return _engine.SignalAsync<TStateMachine, TSignal>((TStateMachine)this, signal, loadStateFunc, persistStateFunc, cancellationToken);
         }
-
     }
 }

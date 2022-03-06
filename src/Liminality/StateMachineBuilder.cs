@@ -2,36 +2,20 @@
 
 namespace PSIBR.Liminality
 {
-    public class StateMachineBuilder<TStateMachine> 
-        : StateMachineBuilder
-    where TStateMachine : StateMachine<TStateMachine>
-    {
-        public StateMachineBuilder() 
-            : base((Type initialState) => new StateMachineDefinition<TStateMachine>(initialState))
-        {
-        }
-    }
 
     public class StateMachineBuilder
     {
-        private readonly Func<Type, StateMachineDefinition> _definitionBuilder;
-
-        public StateMachineBuilder(Func<Type, StateMachineDefinition> definitionBuilder)
-        {
-            _definitionBuilder = definitionBuilder;
-        }
-
         public StateBuilder StartsIn<TState>()
             where TState : class
         {
-            return new StateBuilder(_definitionBuilder(typeof(TState)));
+            return new StateBuilder(new StateMachineStateMap(typeof(TState)));
         }
 
         public class StateBuilder
         {
-            private readonly StateMachineDefinition _stateMachineDefintion;
+            private readonly StateMachineStateMap _stateMachineDefintion;
 
-            public StateBuilder(StateMachineDefinition stateMachineDefinition)
+            public StateBuilder(StateMachineStateMap stateMachineDefinition)
             {
                 _stateMachineDefintion = stateMachineDefinition;
             }
@@ -40,25 +24,14 @@ namespace PSIBR.Liminality
                 where TState : class
                 => new ForStateContext<TState>(this);
 
-            public StateMachineDefinition Build() => _stateMachineDefintion;
+            public StateMachineStateMap Build() => _stateMachineDefintion;
 
             public StateBuilder AddTransition<TState, TSignal, TNewState>()
                 where TState : class
                 where TSignal : class, new()
                 where TNewState : class
             {
-                _stateMachineDefintion[new StateMachineDefinition.Input(typeof(TState), typeof(TSignal))] = new StateMachineDefinition.Transition(null, typeof(TNewState));
-
-                return this;
-            }
-
-            public StateBuilder AddTransition<TState, TSignal, TPrecondition, TNewState>()
-                where TState : class
-                where TSignal : class, new()
-                where TPrecondition : class
-                where TNewState : class
-            {
-                _stateMachineDefintion[new StateMachineDefinition.Input(typeof(TState), typeof(TSignal))] = new StateMachineDefinition.Transition(typeof(TPrecondition), typeof(TNewState));
+                _stateMachineDefintion[new StateMachineStateMap.Input(typeof(TState), typeof(TSignal))] = new StateMachineStateMap.Transition(typeof(TNewState));
 
                 return this;
             }
@@ -93,27 +66,6 @@ namespace PSIBR.Liminality
             public StateBuilder MoveTo<TNewState>()
                 where TNewState : class
                 => _stateBuilder.AddTransition<TState, TSignal, TNewState>();
-
-            public WhenContext<TState, TSignal, TPrecondition> When<TPrecondition>()
-                where TPrecondition : class, IPrecondition<TSignal>
-                => new WhenContext<TState, TSignal, TPrecondition>(_stateBuilder);
-        }
-
-        public class WhenContext<TState, TSignal, TPrecondition>
-            where TState : class
-            where TSignal : class, new()
-            where TPrecondition : class, IPrecondition<TSignal>
-        {
-            private readonly StateBuilder _stateBuilder;
-
-            public WhenContext(StateBuilder stateBuilder)
-            {
-                _stateBuilder = stateBuilder;
-            }
-
-            public StateBuilder MoveTo<TNewState>()
-                where TNewState : class
-                => _stateBuilder.AddTransition<TState, TSignal, TPrecondition, TNewState>();
         }
     }
 }

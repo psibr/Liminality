@@ -4,8 +4,10 @@ using System.Threading.Tasks;
 
 namespace PSIBR.Liminality
 {
-    public interface IPrecondition<TSignal>
+    public interface IBeforeEnterHandler<TStateMachine, TSignal>
+    where TStateMachine : StateMachine<TStateMachine>
+    where TSignal : class
     {
-        ValueTask<AggregateException?> CheckAsync(TSignal signal, CancellationToken cancellationToken = default);
+        ValueTask<AggregateException?> BeforeEnterAsync(SignalContext<TStateMachine> context, TSignal signal, CancellationToken cancellationToken = default);
     }
 }
