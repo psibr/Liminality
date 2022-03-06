@@ -1,7 +1,7 @@
-﻿using System;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using PSIBR.Liminality;
+using System;
 
 namespace Samples.Controllers
 {
@@ -9,19 +9,11 @@ namespace Samples.Controllers
     [Route("assays/[controller]")]
     public class Covid19Controller : ControllerBase
     {
-        private readonly ILogger<Covid19Controller> _logger;
-
-        public Covid19Controller(
-            ILogger<Covid19Controller> logger)
-        {
-            _logger = logger;
-        }
-
         [HttpPost]
         public IActionResult Post(Covid19TestKit.BiologicalSequenceSample sample, [FromServices] Covid19TestKit testKit)
         {
             Covid19TestKit covid19Assay = testKit;
-            
+
             var result = covid19Assay.Signal(sample);
 
             return result.InnerResult switch

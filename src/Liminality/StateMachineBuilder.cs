@@ -1,11 +1,8 @@
-﻿using System;
-
-namespace PSIBR.Liminality
+﻿namespace PSIBR.Liminality
 {
-
     public class StateMachineBuilder
     {
-        public StateBuilder StartsIn<TState>()
+        public static StateBuilder StartsIn<TState>()
             where TState : class
         {
             return new StateBuilder(new StateMachineStateMap(typeof(TState)));
@@ -22,7 +19,7 @@ namespace PSIBR.Liminality
 
             public ForStateContext<TState> For<TState>()
                 where TState : class
-                => new ForStateContext<TState>(this);
+                => new(this);
 
             public StateMachineStateMap Build() => _stateMachineDefintion;
 
@@ -49,7 +46,7 @@ namespace PSIBR.Liminality
 
             public OnContext<TState, TSignal> On<TSignal>()
                 where TSignal : class, new()
-                => new OnContext<TState, TSignal>(_stateBuilder);
+                => new(_stateBuilder);
         }
 
         public class OnContext<TState, TSignal>

@@ -6,13 +6,13 @@ namespace PSIBR.Liminality
 {
     public interface ISignalResult { }
 
-    public class AggregateSignalResult 
+    public class AggregateSignalResult
         : IReadOnlyList<ISignalResult>
     {
         public AggregateSignalResult(IReadOnlyList<ISignalResult> resultStack)
         {
-            if(resultStack is null) throw new ArgumentNullException(nameof(resultStack));
-            if(resultStack.Count == 0) throw new ArgumentException("Cannot be empty", nameof(resultStack));
+            if (resultStack is null) throw new ArgumentNullException(nameof(resultStack));
+            if (resultStack.Count == 0) throw new ArgumentException("Cannot be empty", nameof(resultStack));
 
             InnerResults = resultStack;
 
@@ -85,8 +85,8 @@ namespace PSIBR.Liminality
             StartingState = startingState;
             Signal = signal;
             NewState = newState;
-            
-            if(exception is AggregateException aggregateException)
+
+            if (exception is AggregateException aggregateException)
                 HandlerExceptions = aggregateException;
             else
                 HandlerExceptions = new AggregateException(exception);
@@ -112,8 +112,8 @@ namespace PSIBR.Liminality
             StartingState = startingState;
             Signal = signal;
             Transition = transition;
-            
-            if(preconditionException is AggregateException aggregateException)
+
+            if (preconditionException is AggregateException aggregateException)
                 PreconditionExceptions = aggregateException;
             else
                 PreconditionExceptions = new AggregateException(preconditionException);

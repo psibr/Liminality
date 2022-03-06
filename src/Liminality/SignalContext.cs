@@ -11,7 +11,7 @@ namespace PSIBR.Liminality
         }
 
         public TStateMachine Self { get; }
-        
+
         public object StartingState { get; }
 
         public object NewState { get; }

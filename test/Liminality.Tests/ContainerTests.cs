@@ -1,11 +1,8 @@
-using System;
-using System.Collections.Generic;
-using Xunit;
 using Lamar;
-using PSIBR.Liminality;
+using Microsoft.Extensions.DependencyInjection;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
+using Xunit;
 
 namespace PSIBR.Liminality.Tests
 {
@@ -18,7 +15,7 @@ namespace PSIBR.Liminality.Tests
         {
             var container = new Container(x =>
             {
-                x.AddStateMachine<BasicStateMachine>(builder => builder
+                x.AddStateMachine<BasicStateMachine>(builder => StateMachineBuilder
                     .StartsIn<Idle>()
                     .For<Idle>().On<Start>().MoveTo<InProgress>()
                     .For<InProgress>().On<Finish>().MoveTo<Finished>()
@@ -35,8 +32,7 @@ namespace PSIBR.Liminality.Tests
         {
             var container = new Container(x =>
             {
-                x.AddStateMachine<BasicStateMachine>(builder => builder
-                    .StartsIn<Idle>()
+                x.AddStateMachine<BasicStateMachine>(builder => StateMachineBuilder.StartsIn<Idle>()
                     .For<Idle>().On<Start>().MoveTo<InProgress>()
                     .For<InProgress>().On<Finish>().MoveTo<Finished>()
                     .Build());
@@ -50,7 +46,7 @@ namespace PSIBR.Liminality.Tests
 
     public class BasicStateMachine : StateMachine<BasicStateMachine>
     {
-        public BasicStateMachine(LiminalEngine engine, StateMachineDefinition<BasicStateMachine> definition) : base(engine,definition)
+        public BasicStateMachine(LiminalEngine engine, StateMachineDefinition<BasicStateMachine> definition) : base(engine, definition)
         {
         }
 

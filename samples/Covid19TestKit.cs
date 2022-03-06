@@ -1,9 +1,9 @@
-﻿using System;
+﻿using Microsoft.Extensions.DependencyInjection;
+using PSIBR.Liminality;
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-using PSIBR.Liminality;
 
 namespace Samples
 {
@@ -13,8 +13,7 @@ namespace Samples
     {
         public static void AddCovid19TestKitSample(this IServiceCollection services)
         {
-            services.AddStateMachine<Covid19TestKit>(builder => builder
-                .StartsIn<Ready>()
+            services.AddStateMachine<Covid19TestKit>(builder => StateMachineBuilder.StartsIn<Ready>()
                 .For<Ready>().On<BiologicalSequenceSample>().MoveTo<Analyzing>()
                 .For<Analyzing>().On<Analysis>().MoveTo<Evaluating>()
                 .For<Evaluating>().On<InconclusiveEvaluation>().MoveTo<Inconclusive>()

@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace PSIBR.Liminality
 {
-    public sealed class LiminalEngine
+    public sealed partial class LiminalEngine
     {
         private readonly IServiceProvider _serviceProvider;
         public LiminalEngine(IServiceProvider serviceProvider)
@@ -30,6 +31,7 @@ namespace PSIBR.Liminality
             return new TransitionResolution<TStateMachine, TSignal>(transition, beforeEnterHandler, state);
         }
 
+        [SuppressMessage("Reliability", "CA2012:Use ValueTasks correctly", Justification = "Check for synchronyous completion first")]
         public async ValueTask<AggregateSignalResult> SignalAsync<TStateMachine, TSignal>(
             TStateMachine self,
             TSignal signal,
@@ -89,34 +91,13 @@ namespace PSIBR.Liminality
 
             return CreateResult(new TransitionedResult(startingState, resolution.State), handlerValueTask.Result);
 
-            AggregateSignalResult CreateResult(ISignalResult result, AggregateSignalResult? next = default)
+            static AggregateSignalResult CreateResult(ISignalResult result, AggregateSignalResult? next = default)
             {
                 var currentResult = new List<ISignalResult> { result };
 
                 if (next is null) return new AggregateSignalResult(currentResult);
 
                 return new AggregateSignalResult(next.Concat(currentResult).ToList());
-            }
-        }
-
-        private sealed class TransitionResolution<TStateMachine, TSignal>
-        where TStateMachine : StateMachine<TStateMachine>
-        where TSignal : class, new()
-        {
-            public StateMachineStateMap.Transition Transition { get; }
-
-            public IBeforeEnterHandler<TStateMachine, TSignal>? BeforeEnterHandler;
-
-            public object State;
-
-            public IOnEnterHandler<TStateMachine, TSignal>? Handler;
-
-            public TransitionResolution(StateMachineStateMap.Transition transition, IBeforeEnterHandler<TStateMachine, TSignal>? precondition, object state)
-            {
-                Transition = transition;
-                BeforeEnterHandler = precondition;
-                State = state;
-                Handler = state as IOnEnterHandler<TStateMachine, TSignal>;
             }
         }
     }

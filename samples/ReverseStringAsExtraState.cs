@@ -1,9 +1,9 @@
+using Microsoft.Extensions.DependencyInjection;
+using PSIBR.Liminality;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-using PSIBR.Liminality;
 
 
 namespace Samples
@@ -14,8 +14,7 @@ namespace Samples
     {
         public static void AddReverseStringAsExtraStateSample(this IServiceCollection services)
         {
-            services.AddStateMachine<ReverseStringAsExtraState>(builder => builder
-                .StartsIn<Idle>()
+            services.AddStateMachine<ReverseStringAsExtraState>(builder => StateMachineBuilder.StartsIn<Idle>()
                 .For<Idle>().On<LoadValues>().MoveTo<Idle>()
                 .For<Idle>().On<StartProcessing>().MoveTo<Processing>()
                 .For<Processing>().On<ReportResult>().MoveTo<Finished>()
