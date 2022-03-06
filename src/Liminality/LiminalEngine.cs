@@ -50,20 +50,18 @@ namespace PSIBR.Liminality
 
             if (resolution.BeforeEnterHandler is not null)
             {
-                ValueTask<AggregateException?> preconditionValueTask;
+                ValueTask beforeEnterHandlerValueTask;
 
                 try
                 {
-                    preconditionValueTask = resolution.BeforeEnterHandler.BeforeEnterAsync(new SignalContext<TStateMachine>(self, startingState, resolution.State), signal, cancellationToken);
+                    beforeEnterHandlerValueTask = resolution.BeforeEnterHandler.BeforeEnterAsync(new SignalContext<TStateMachine>(self, startingState, resolution.State), signal, cancellationToken);
 
-                    if (preconditionValueTask.IsCompletedSuccessfully is false) await preconditionValueTask.ConfigureAwait(false);
+                    if (beforeEnterHandlerValueTask.IsCompletedSuccessfully is false) await beforeEnterHandlerValueTask.ConfigureAwait(false);
                 }
                 catch (Exception ex)
                 {
-                    return CreateResult(new ExceptionThrownByPreconditionResult(startingState, signal, resolution.Transition, ex));
+                    return CreateResult(new ExceptionThrownByBeforeEnterHandlerResult(startingState, signal, resolution.Transition, ex));
                 }
-
-                if (preconditionValueTask.Result is not null) return CreateResult(new RejectedByPreconditionResult(startingState, signal, resolution.Transition, preconditionValueTask.Result));
             }
 
             var persistStateValueTask = persistStateFunc(resolution.State, cancellationToken);
@@ -71,23 +69,23 @@ namespace PSIBR.Liminality
 
             if (resolution.Handler is null) return CreateResult(new TransitionedResult(startingState, resolution.State));
 
-            ValueTask<AggregateSignalResult?> handlerValueTask;
+            ValueTask<AggregateSignalResult?> afterEntryHandlerValueTask;
 
             try
             {
-                handlerValueTask = resolution.Handler.OnEnterAsync(
+                afterEntryHandlerValueTask = resolution.Handler.AfterEnterAsync(
                     context: new SignalContext<TStateMachine>(self, startingState, resolution.State),
                     signal,
                     cancellationToken);
 
-                if (!handlerValueTask.IsCompletedSuccessfully) await handlerValueTask.ConfigureAwait(false);
+                if (!afterEntryHandlerValueTask.IsCompletedSuccessfully) await afterEntryHandlerValueTask.ConfigureAwait(false);
             }
             catch (Exception ex)
             {
-                return CreateResult(new ExceptionThrownByHandlerResult(startingState, signal, resolution.State, ex));
+                return CreateResult(new ExceptionThrownByAfterEntryHandlerResult(startingState, signal, resolution.State, ex));
             }
 
-            return CreateResult(new TransitionedResult(startingState, resolution.State), handlerValueTask.Result);
+            return CreateResult(new TransitionedResult(startingState, resolution.State), afterEntryHandlerValueTask.Result);
 
             AggregateSignalResult CreateResult(ISignalResult result, AggregateSignalResult? next = default)
             {
@@ -109,14 +107,14 @@ namespace PSIBR.Liminality
 
             public object State;
 
-            public IOnEnterHandler<TStateMachine, TSignal>? Handler;
+            public IAfterEnterHandler<TStateMachine, TSignal>? Handler;
 
             public TransitionResolution(StateMachineStateMap.Transition transition, IBeforeEnterHandler<TStateMachine, TSignal>? precondition, object state)
             {
                 Transition = transition;
                 BeforeEnterHandler = precondition;
                 State = state;
-                Handler = state as IOnEnterHandler<TStateMachine, TSignal>;
+                Handler = state as IAfterEnterHandler<TStateMachine, TSignal>;
             }
         }
     }

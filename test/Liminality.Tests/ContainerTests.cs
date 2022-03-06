@@ -14,15 +14,17 @@ namespace PSIBR.Liminality.Tests
     public class ContainerTests
     {
         [Fact]
-        public void CanResolveEngine()
+        public void CanResolveStateMachine()
         {
             var container = new Container(x =>
             {
-                x.AddStateMachine<BasicStateMachine>(builder => builder
+                x.AddStateMachineDependencies<BasicStateMachine>(builder => builder
                     .StartsIn<Idle>()
                     .For<Idle>().On<Start>().MoveTo<InProgress>()
                     .For<InProgress>().On<Finish>().MoveTo<Finished>()
                     .Build());
+
+                x.AddTransient<BasicStateMachine>();
             });
 
             var engine = container.GetService<LiminalEngine>();
@@ -31,15 +33,17 @@ namespace PSIBR.Liminality.Tests
         }
 
         [Fact]
-        public void CanResolveEngineFromFactory()
+        public void CanResolveStateMachineFromFactory()
         {
             var container = new Container(x =>
             {
-                x.AddStateMachine<BasicStateMachine>(builder => builder
+                x.AddStateMachineDependencies<BasicStateMachine>(builder => builder
                     .StartsIn<Idle>()
                     .For<Idle>().On<Start>().MoveTo<InProgress>()
                     .For<InProgress>().On<Finish>().MoveTo<Finished>()
                     .Build());
+
+                x.AddTransient<BasicStateMachine>();
             });
 
             var basicStateMachine = container.GetRequiredService<BasicStateMachine>();

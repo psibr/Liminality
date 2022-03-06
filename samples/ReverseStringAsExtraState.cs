@@ -14,12 +14,14 @@ namespace Samples
     {
         public static void AddReverseStringAsExtraStateSample(this IServiceCollection services)
         {
-            services.AddStateMachine<ReverseStringAsExtraState>(builder => builder
+            services.AddStateMachineDependencies<ReverseStringAsExtraState>(builder => builder
                 .StartsIn<Idle>()
                 .For<Idle>().On<LoadValues>().MoveTo<Idle>()
                 .For<Idle>().On<StartProcessing>().MoveTo<Processing>()
                 .For<Processing>().On<ReportResult>().MoveTo<Finished>()
                 .Build());
+
+            services.AddTransient<ReverseStringAsExtraState>();
         }
     }
 
@@ -36,7 +38,7 @@ namespace Samples
         public async ValueTask<AggregateSignalResult?> SignalAsync<TSignal>(TSignal signal, CancellationToken cancellationToken = default)
         where TSignal : class, new()
         {
-            var valueTask = base.SignalAsync<TSignal>(
+            var valueTask = SignalAsync(
                 signal,
                 cancellationToken => new ValueTask<object>(State),
                 (state, cancellationToken) =>
@@ -61,7 +63,7 @@ namespace Samples
         public class Idle { }
 
         public class Processing
-            : IOnEnterHandler<ReverseStringAsExtraState, StartProcessing>
+            : IAfterEnterHandler<ReverseStringAsExtraState, StartProcessing>
         {
             private static IEnumerable<string> GraphemeClusters(string s)
             {
@@ -76,7 +78,7 @@ namespace Samples
                 return string.Join(string.Empty, GraphemeClusters(s).Reverse().ToArray());
             }
 
-            public ValueTask<AggregateSignalResult?> OnEnterAsync(
+            public ValueTask<AggregateSignalResult?> AfterEnterAsync(
                 SignalContext<ReverseStringAsExtraState> context,
                 StartProcessing signal,
                 CancellationToken cancellationToken = default)

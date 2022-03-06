@@ -23,7 +23,7 @@ namespace PSIBR.Liminality
             CancellationToken cancellationToken = default)
         where TSignal : class, new()
         {
-            return _engine.SignalAsync<TStateMachine, TSignal>((TStateMachine)this, signal, loadStateFunc, persistStateFunc, cancellationToken);
+            return _engine.SignalAsync((TStateMachine)this, signal, loadStateFunc, persistStateFunc, cancellationToken);
         }
     }
 }

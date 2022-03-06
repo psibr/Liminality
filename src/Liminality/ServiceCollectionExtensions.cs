@@ -11,7 +11,7 @@ namespace PSIBR.Liminality
             services.AddScoped<LiminalEngine>();
         }
 
-        public static void AddStateMachine<TStateMachine>(
+        public static void AddStateMachineDependencies<TStateMachine>(
             this IServiceCollection services,
             Func<StateMachineBuilder, StateMachineStateMap> definitionBuilder)
         where TStateMachine : StateMachine<TStateMachine>
@@ -21,19 +21,9 @@ namespace PSIBR.Liminality
 
             services.AddSingleton(definition);
 
-            services.AddTransient<TStateMachine>();
-
-            RegisterStateMachineDependencies(services, definition);
-        }
-
-        private static void RegisterStateMachineDependencies<TStateMachine>(
-            IServiceCollection services,
-            StateMachineDefinition<TStateMachine> definition)
-        where TStateMachine : StateMachine<TStateMachine>
-        {
             foreach (var stateMachineComponent in definition.GetStateTypes())
             {
-                services.AddScoped(stateMachineComponent);
+                services.AddTransient(stateMachineComponent);
             }
         }
     }

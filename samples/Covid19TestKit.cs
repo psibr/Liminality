@@ -13,7 +13,7 @@ namespace Samples
     {
         public static void AddCovid19TestKitSample(this IServiceCollection services)
         {
-            services.AddStateMachine<Covid19TestKit>(builder => builder
+            services.AddStateMachineDependencies<Covid19TestKit>(builder => builder
                 .StartsIn<Ready>()
                 .For<Ready>().On<BiologicalSequenceSample>().MoveTo<Analyzing>()
                 .For<Analyzing>().On<Analysis>().MoveTo<Evaluating>()
@@ -21,11 +21,27 @@ namespace Samples
                 .For<Evaluating>().On<NegativeEvaluation>().MoveTo<Negative>()
                 .For<Evaluating>().On<PositiveEvaluation>().MoveTo<Positive>()
                 .Build());
+
+            services.AddScoped<Factory>();
         }
     }
 
     public class Covid19TestKit : StateMachine<Covid19TestKit>
     {
+        public class Factory
+        {
+            private readonly LiminalEngine _engine;
+            private readonly StateMachineDefinition<Covid19TestKit> _definition;
+
+            public Factory(LiminalEngine engine, StateMachineDefinition<Covid19TestKit> definition)
+            {
+                _engine = engine;
+                _definition = definition;
+            }
+
+            public Covid19TestKit CreateKit() => new(_engine, _definition);
+        }
+
         public Covid19TestKit(LiminalEngine engine, StateMachineDefinition<Covid19TestKit> definition)
             : base(engine, definition)
         {
@@ -36,7 +52,7 @@ namespace Samples
         public AggregateSignalResult Signal<TSignal>(TSignal signal)
         where TSignal : class, new()
         {
-            var valueTask = base.SignalAsync<TSignal>(
+            var valueTask = SignalAsync(
                 signal,
                 cancellationToken => new ValueTask<object>(State),
                 (state, cancellationToken) => { State = state; return new ValueTask(); },
@@ -79,14 +95,14 @@ namespace Samples
 
         public class Analyzing
             : IBeforeEnterHandler<Covid19TestKit, BiologicalSequenceSample>
-            , IOnEnterHandler<Covid19TestKit, BiologicalSequenceSample>
+            , IAfterEnterHandler<Covid19TestKit, BiologicalSequenceSample>
         {
-            public ValueTask<AggregateException?> BeforeEnterAsync(SignalContext<Covid19TestKit> context, BiologicalSequenceSample signal, CancellationToken cancellationToken = default)
+            public ValueTask BeforeEnterAsync(SignalContext<Covid19TestKit> context, BiologicalSequenceSample signal, CancellationToken cancellationToken = default)
             {
                 if (!string.IsNullOrWhiteSpace(signal.Inst?.Data))
-                    return new(); // return null for no error
+                    return ValueTask.CompletedTask; // return empty task for no error
 
-                return new(new AggregateException(new EmptySequenceInstException()));
+                throw new EmptySequenceInstException();
             }
 
             /// <summary>
@@ -94,7 +110,7 @@ namespace Samples
             /// </summary>
             /// <param name="sample"></param>
             /// <param name="cancellationToken"></param>
-            public ValueTask<AggregateSignalResult?> OnEnterAsync(SignalContext<Covid19TestKit> context, BiologicalSequenceSample sample, CancellationToken cancellationToken = default)
+            public ValueTask<AggregateSignalResult?> AfterEnterAsync(SignalContext<Covid19TestKit> context, BiologicalSequenceSample sample, CancellationToken cancellationToken = default)
             {
                 var result = new Analysis
                 {
@@ -117,9 +133,9 @@ namespace Samples
         }
 
         public class Evaluating
-            : IOnEnterHandler<Covid19TestKit, Analysis>
+            : IAfterEnterHandler<Covid19TestKit, Analysis>
         {
-            public ValueTask<AggregateSignalResult?> OnEnterAsync(SignalContext<Covid19TestKit> context, Analysis analysis, CancellationToken cancellationToken = default)
+            public ValueTask<AggregateSignalResult?> AfterEnterAsync(SignalContext<Covid19TestKit> context, Analysis analysis, CancellationToken cancellationToken = default)
             {
                 if (analysis.Orf1Gene && analysis.NGene && analysis.EGene)
                 {

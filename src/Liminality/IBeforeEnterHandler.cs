@@ -8,6 +8,6 @@ namespace PSIBR.Liminality
     where TStateMachine : StateMachine<TStateMachine>
     where TSignal : class
     {
-        ValueTask<AggregateException?> BeforeEnterAsync(SignalContext<TStateMachine> context, TSignal signal, CancellationToken cancellationToken = default);
+        ValueTask BeforeEnterAsync(SignalContext<TStateMachine> context, TSignal signal, CancellationToken cancellationToken = default);
     }
 }

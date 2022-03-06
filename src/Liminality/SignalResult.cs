@@ -51,32 +51,9 @@ namespace PSIBR.Liminality
         public object NewState { get; }
     }
 
-    public class RejectedByPreconditionResult : ISignalResult
+    public class ExceptionThrownByAfterEntryHandlerResult : ISignalResult
     {
-        public RejectedByPreconditionResult(
-            object startingState,
-            object signal,
-            StateMachineStateMap.Transition transition,
-            AggregateException preconditionExceptions)
-        {
-            StartingState = startingState;
-            Signal = signal;
-            Transition = transition;
-            PreconditionExceptions = preconditionExceptions;
-        }
-
-        public object StartingState { get; }
-
-        public object Signal { get; }
-
-        public StateMachineStateMap.Transition Transition { get; }
-
-        public AggregateException PreconditionExceptions { get; }
-    }
-
-    public class ExceptionThrownByHandlerResult : ISignalResult
-    {
-        public ExceptionThrownByHandlerResult(
+        public ExceptionThrownByAfterEntryHandlerResult(
             object startingState,
             object signal,
             object newState,
@@ -101,9 +78,9 @@ namespace PSIBR.Liminality
         public AggregateException HandlerExceptions { get; }
     }
 
-    public class ExceptionThrownByPreconditionResult : ISignalResult
+    public class ExceptionThrownByBeforeEnterHandlerResult : ISignalResult
     {
-        public ExceptionThrownByPreconditionResult(
+        public ExceptionThrownByBeforeEnterHandlerResult(
             object startingState,
             object signal,
             StateMachineStateMap.Transition transition,
@@ -114,9 +91,9 @@ namespace PSIBR.Liminality
             Transition = transition;
             
             if(preconditionException is AggregateException aggregateException)
-                PreconditionExceptions = aggregateException;
+                Exceptions = aggregateException;
             else
-                PreconditionExceptions = new AggregateException(preconditionException);
+                Exceptions = new AggregateException(preconditionException);
         }
 
         public object StartingState { get; }
@@ -125,7 +102,7 @@ namespace PSIBR.Liminality
 
         public StateMachineStateMap.Transition Transition { get; }
 
-        public AggregateException PreconditionExceptions { get; }
+        public AggregateException Exceptions { get; }
     }
 
     public class TransitionNotFoundResult : ISignalResult
