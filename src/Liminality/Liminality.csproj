@@ -3,13 +3,15 @@
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
     <PackageId>PSIBR.Liminality</PackageId>
-    <Title>Powerful idiomatic state machines for .NET</Title>
-    <Description></Description>
+    <Title>Transition library by a transfem so you know it's good</Title>
+    <Description>
+      PSIBR.Liminality is a basic state machine modelling library that handles a
+      lot of organization descisions for you, but doesn't try to boil the ocean. 
+      Bring your own state storage and fancy behaviors.</Description>
     <Authors>@aidapsibr</Authors>
-    <Company>PSIBR, LLC</Company>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <RequireLicenseAcceptance>true</RequireLicenseAcceptance>
-    <Copyright>Copyright © 2020 PSIBR, LLC</Copyright>
+    <Copyright>Copyright © 2020 @aidapsibr</Copyright>
     <RootNamespace>PSIBR.Liminality</RootNamespace>
     <Nullable>enable</Nullable>
     

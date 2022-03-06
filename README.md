@@ -1,7 +1,10 @@
-# Liminality
+# PSIBR.Liminality
 
-Powerful idiomatic state machines for .NET.
+>Transition library by a transfem so you know it's good
 
+PSIBR.Liminality is a basic state machine modelling library that handles a lot of organization descisions for you, but doesn't try to boil the ocean. 
+
+Bring your own state storage and fancy behaviors.
 
 
 ## Cloning and Building
@@ -21,7 +24,7 @@ dotnet build
 Once you've cloned the repo, from the repo root folder, run:
 
 ```
-dotnet run --project examples/AspNetCoreExample
+dotnet run --project samples
 ```
 
 You can now browse to https://localhost:5001/swagger to interact with the samples.
@@ -40,7 +43,7 @@ dotnet test
 
 ## Contributions
 
-Maintained by .NET OSS organization [卩丂丨乃尺](https://www.psibr.net).
+Soon!
 
 ## Thanks
 
