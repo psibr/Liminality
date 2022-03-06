@@ -21,20 +21,15 @@ namespace Samples
                 .For<Processing>().On<ReportResult>().MoveTo<Finished>()
                 .Build());
         }
-
-        public static ReverseStringAsExtraState Create(this Engine<ReverseStringAsExtraState> engine)
-        {
-            return new ReverseStringAsExtraState(engine);
-        }
     }
 
     public class ReverseStringAsExtraState : StateMachine<ReverseStringAsExtraState>
     {
-        public ReverseStringAsExtraState(Engine<ReverseStringAsExtraState> engine) : base(engine) { }
+        public ReverseStringAsExtraState(LiminalEngine engine, StateMachineDefinition<ReverseStringAsExtraState> definition) : base(engine, definition) { }
 
-        public string Input { get; private set;} = string.Empty;
+        public string Input { get; private set; } = string.Empty;
 
-        public string? Output { get; private set;}
+        public string? Output { get; private set; }
 
         public object State { get; private set; } = new Idle();
 
@@ -44,18 +39,18 @@ namespace Samples
             var valueTask = base.SignalAsync<TSignal>(
                 signal,
                 cancellationToken => new ValueTask<object>(State),
-                (state, cancellationToken) => 
+                (state, cancellationToken) =>
                 {
                     // In our persist function we can grab values from signals.
                     // We could also do this in any handler by assigning to the state machine
                     // and saving it here.
-                    if(signal is LoadValues loadValuesSignal)
+                    if (signal is LoadValues loadValuesSignal)
                         Input = loadValuesSignal.Input ?? string.Empty;
                     else if (signal is ReportResult resultReport)
                         Output = resultReport.Result;
-                    
+
                     State = state;
-                    
+
                     return new ValueTask();
                 },
                 cancellationToken);
@@ -66,24 +61,27 @@ namespace Samples
         public class Idle { }
 
         public class Processing
-            : ISignalHandler<ReverseStringAsExtraState, StartProcessing>
+            : IOnEnterHandler<ReverseStringAsExtraState, StartProcessing>
         {
-            private static IEnumerable<string> GraphemeClusters(string s) {
+            private static IEnumerable<string> GraphemeClusters(string s)
+            {
                 var enumerator = System.Globalization.StringInfo.GetTextElementEnumerator(s);
-                while(enumerator.MoveNext()) {
+                while (enumerator.MoveNext())
+                {
                     yield return (string)enumerator.Current;
                 }
             }
-            private static string ReverseGraphemeClusters(string s) {
+            private static string ReverseGraphemeClusters(string s)
+            {
                 return string.Join(string.Empty, GraphemeClusters(s).Reverse().ToArray());
             }
 
-            public ValueTask<AggregateSignalResult?> InvokeAsync(
+            public ValueTask<AggregateSignalResult?> OnEnterAsync(
                 SignalContext<ReverseStringAsExtraState> context,
                 StartProcessing signal,
                 CancellationToken cancellationToken = default)
             {
-                return context.Self.SignalAsync(new ReportResult { Result =  ReverseGraphemeClusters(context.Self.Input)} , cancellationToken);
+                return context.Self.SignalAsync(new ReportResult { Result = ReverseGraphemeClusters(context.Self.Input) }, cancellationToken);
             }
         }
 
@@ -96,7 +94,7 @@ namespace Samples
 
         public class StartProcessing { }
 
-        public class ReportResult 
+        public class ReportResult
         {
             public string? Result { get; set; }
         }

@@ -19,10 +19,8 @@ namespace Samples.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Post(ReverseStringAsExtraState.LoadValues values, [FromServices] Engine<ReverseStringAsExtraState> engine)
+        public async Task<IActionResult> Post(ReverseStringAsExtraState.LoadValues values, [FromServices] ReverseStringAsExtraState stateMachine)
         {
-            var stateMachine = engine.Create();
-
             // load the input values (Idle (current state), LoadValues (signal) => Idle (new state))
             await stateMachine.SignalAsync(values);
 

@@ -15,24 +15,19 @@ namespace Samples
         {
             services.AddStateMachine<Covid19TestKit>(builder => builder
                 .StartsIn<Ready>()
-                .For<Ready>().On<BiologicalSequenceSample>().When<BiologicalSequenceIsntEmpty>().MoveTo<Analyzing>()
+                .For<Ready>().On<BiologicalSequenceSample>().MoveTo<Analyzing>()
                 .For<Analyzing>().On<Analysis>().MoveTo<Evaluating>()
                 .For<Evaluating>().On<InconclusiveEvaluation>().MoveTo<Inconclusive>()
                 .For<Evaluating>().On<NegativeEvaluation>().MoveTo<Negative>()
                 .For<Evaluating>().On<PositiveEvaluation>().MoveTo<Positive>()
                 .Build());
         }
-
-        public static Covid19TestKit Create(this Engine<Covid19TestKit> engine)
-        {
-            return new Covid19TestKit(engine);
-        }
     }
 
     public class Covid19TestKit : StateMachine<Covid19TestKit>
     {
-        public Covid19TestKit(Engine<Covid19TestKit> engine)
-            : base(engine)
+        public Covid19TestKit(LiminalEngine engine, StateMachineDefinition<Covid19TestKit> definition)
+            : base(engine, definition)
         {
         }
 
@@ -63,12 +58,17 @@ namespace Samples
         /// https://www.ncbi.nlm.nih.gov/IEB/ToolBox/SDKDOCS/DATAMODL.HTML
         /// </summary>
         /// <remarks>This isn't fully implemented, just enough for an example</remarks>
-        public class BiologicalSequenceSample
+        public class BiologicalSequenceSample : IFormattable
         {
             [Required]
             public string? Id { get; set; }
 
             public Sequence? Inst { get; set; }
+
+            public string ToString(string? format, IFormatProvider? formatProvider)
+            {
+                throw new NotImplementedException();
+            }
 
             public class Sequence
             {
@@ -77,27 +77,24 @@ namespace Samples
 
         }
 
-        public class BiologicalSequenceIsntEmpty
-            : IPrecondition<BiologicalSequenceSample>
+        public class Analyzing
+            : IBeforeEnterHandler<Covid19TestKit, BiologicalSequenceSample>
+            , IOnEnterHandler<Covid19TestKit, BiologicalSequenceSample>
         {
-            public ValueTask<AggregateException?> CheckAsync(BiologicalSequenceSample signal, CancellationToken cancellationToken = default)
+            public ValueTask<AggregateException?> BeforeEnterAsync(SignalContext<Covid19TestKit> context, BiologicalSequenceSample signal, CancellationToken cancellationToken = default)
             {
                 if (!string.IsNullOrWhiteSpace(signal.Inst?.Data))
-                    return new ValueTask<AggregateException?>();
+                    return new(); // return null for no error
 
-                return new ValueTask<AggregateException?>(new AggregateException(new EmptySequenceInstException()));
+                return new(new AggregateException(new EmptySequenceInstException()));
             }
-        }
 
-        public class Analyzing
-            : ISignalHandler<Covid19TestKit, BiologicalSequenceSample>
-        {
             /// <summary>
             /// Test for SARS-CoV-2
             /// </summary>
             /// <param name="sample"></param>
             /// <param name="cancellationToken"></param>
-            public ValueTask<AggregateSignalResult?> InvokeAsync(SignalContext<Covid19TestKit> context, BiologicalSequenceSample sample, CancellationToken cancellationToken = default)
+            public ValueTask<AggregateSignalResult?> OnEnterAsync(SignalContext<Covid19TestKit> context, BiologicalSequenceSample sample, CancellationToken cancellationToken = default)
             {
                 var result = new Analysis
                 {
@@ -106,7 +103,7 @@ namespace Samples
                     EGene = sample.Inst?.Data?.Contains("E") ?? false
                 };
 
-                return new ValueTask<AggregateSignalResult?>(context.Self.Signal(result));
+                return new(context.Self.Signal(result));
             }
         }
 
@@ -120,21 +117,21 @@ namespace Samples
         }
 
         public class Evaluating
-            : ISignalHandler<Covid19TestKit, Analysis>
+            : IOnEnterHandler<Covid19TestKit, Analysis>
         {
-            public ValueTask<AggregateSignalResult?> InvokeAsync(SignalContext<Covid19TestKit> context, Analysis analysis, CancellationToken cancellationToken = default)
+            public ValueTask<AggregateSignalResult?> OnEnterAsync(SignalContext<Covid19TestKit> context, Analysis analysis, CancellationToken cancellationToken = default)
             {
                 if (analysis.Orf1Gene && analysis.NGene && analysis.EGene)
                 {
-                    return new ValueTask<AggregateSignalResult?>(context.Self.Signal(new PositiveEvaluation()));
+                    return new(context.Self.Signal(new PositiveEvaluation()));
                 }
                 else if (!analysis.Orf1Gene && !analysis.NGene && !analysis.EGene)
                 {
-                    return new ValueTask<AggregateSignalResult?>(context.Self.Signal(new NegativeEvaluation()));
+                    return new(context.Self.Signal(new NegativeEvaluation()));
                 }
                 else
                 {
-                    return new ValueTask<AggregateSignalResult?>(context.Self.Signal(new InconclusiveEvaluation()));
+                    return new(context.Self.Signal(new InconclusiveEvaluation()));
                 }
 
             }

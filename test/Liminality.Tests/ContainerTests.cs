@@ -11,7 +11,7 @@ namespace PSIBR.Liminality.Tests
 {
     using static BasicStateMachine;
 
-    public class UnitTest1
+    public class ContainerTests
     {
         [Fact]
         public void CanResolveEngine()
@@ -25,7 +25,7 @@ namespace PSIBR.Liminality.Tests
                     .Build());
             });
 
-            var engine = container.GetService(typeof(Engine<BasicStateMachine>)) as Engine<BasicStateMachine>;
+            var engine = container.GetService<LiminalEngine>();
 
             Assert.NotNull(engine);
         }
@@ -40,21 +40,17 @@ namespace PSIBR.Liminality.Tests
                     .For<Idle>().On<Start>().MoveTo<InProgress>()
                     .For<InProgress>().On<Finish>().MoveTo<Finished>()
                     .Build());
-
-                x.AddScoped<Factory>();
             });
 
-            var factory = container.GetRequiredService<Factory>();
+            var basicStateMachine = container.GetRequiredService<BasicStateMachine>();
 
-            var stateMachine = factory.Create();
-
-            Assert.NotNull(stateMachine);
+            Assert.NotNull(basicStateMachine);
         }
     }
 
     public class BasicStateMachine : StateMachine<BasicStateMachine>
     {
-        public BasicStateMachine(Engine<BasicStateMachine> engine) : base(engine)
+        public BasicStateMachine(LiminalEngine engine, StateMachineDefinition<BasicStateMachine> definition) : base(engine,definition)
         {
         }
 
@@ -64,18 +60,6 @@ namespace PSIBR.Liminality.Tests
             where TSignal : class, new()
         {
             return base.SignalAsync(signal, _ => new ValueTask<object>(State), (state, _) => { State = state; return new ValueTask(); }, cancellationToken);
-        }
-
-        public class Factory
-        {
-            private readonly Engine<BasicStateMachine> _engine;
-
-            public Factory(Engine<BasicStateMachine> engine)
-            {
-                _engine = engine;
-            }
-
-            public BasicStateMachine Create() => new BasicStateMachine(_engine);
         }
 
         // States

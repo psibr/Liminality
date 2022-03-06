@@ -18,9 +18,9 @@ namespace Samples.Controllers
         }
 
         [HttpPost]
-        public IActionResult Post(Covid19TestKit.BiologicalSequenceSample sample, [FromServices] Engine<Covid19TestKit> engine)
+        public IActionResult Post(Covid19TestKit.BiologicalSequenceSample sample, [FromServices] Covid19TestKit testKit)
         {
-            var covid19Assay = engine.Create();
+            Covid19TestKit covid19Assay = testKit;
             
             var result = covid19Assay.Signal(sample);
 

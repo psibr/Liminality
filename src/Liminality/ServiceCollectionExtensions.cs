@@ -6,31 +6,32 @@ namespace PSIBR.Liminality
 {
     public static class ServiceCollectionExtensions
     {
+        public static void AddLiminality(this IServiceCollection services)
+        {
+            services.AddScoped<LiminalEngine>();
+        }
+
         public static void AddStateMachine<TStateMachine>(
             this IServiceCollection services,
-            Func<StateMachineBuilder, StateMachineDefinition> definitionBuilder)
+            Func<StateMachineBuilder, StateMachineStateMap> definitionBuilder)
         where TStateMachine : StateMachine<TStateMachine>
         {
-            RegisterStateMachineDependencies<TStateMachine>(services, definitionBuilder);
+            var stateMap = definitionBuilder(new StateMachineBuilder());
+            var definition = new StateMachineDefinition<TStateMachine>(stateMap);
+
+            services.AddSingleton(definition);
+
+            services.AddTransient<TStateMachine>();
+
+            RegisterStateMachineDependencies(services, definition);
         }
 
         private static void RegisterStateMachineDependencies<TStateMachine>(
             IServiceCollection services,
-            Func<StateMachineBuilder, StateMachineDefinition> definitionBuilder)
+            StateMachineDefinition<TStateMachine> definition)
         where TStateMachine : StateMachine<TStateMachine>
         {
-            StateMachineDefinition<TStateMachine> definition = (StateMachineDefinition<TStateMachine>)definitionBuilder(new StateMachineBuilder<TStateMachine>());
-
-            services.AddSingleton(definition);
-            services.AddScoped<Engine<TStateMachine>>();
-
-            foreach (var stateMachineComponent in definition.Values
-                .Select(transition =>
-                    transition.PreconditionType is null
-                        ? new[] { transition.NewStateType }
-                        : new[] { transition.NewStateType, transition.PreconditionType })
-                .SelectMany(types => types)
-                .Distinct())
+            foreach (var stateMachineComponent in definition.GetStateTypes())
             {
                 services.AddScoped(stateMachineComponent);
             }

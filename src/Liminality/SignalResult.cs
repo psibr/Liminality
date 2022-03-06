@@ -56,7 +56,7 @@ namespace PSIBR.Liminality
         public RejectedByPreconditionResult(
             object startingState,
             object signal,
-            StateMachineDefinition.Transition transition,
+            StateMachineStateMap.Transition transition,
             AggregateException preconditionExceptions)
         {
             StartingState = startingState;
@@ -69,7 +69,7 @@ namespace PSIBR.Liminality
 
         public object Signal { get; }
 
-        public StateMachineDefinition.Transition Transition { get; }
+        public StateMachineStateMap.Transition Transition { get; }
 
         public AggregateException PreconditionExceptions { get; }
     }
@@ -106,7 +106,7 @@ namespace PSIBR.Liminality
         public ExceptionThrownByPreconditionResult(
             object startingState,
             object signal,
-            StateMachineDefinition.Transition transition,
+            StateMachineStateMap.Transition transition,
             Exception preconditionException)
         {
             StartingState = startingState;
@@ -123,7 +123,7 @@ namespace PSIBR.Liminality
 
         public object Signal { get; }
 
-        public StateMachineDefinition.Transition Transition { get; }
+        public StateMachineStateMap.Transition Transition { get; }
 
         public AggregateException PreconditionExceptions { get; }
     }

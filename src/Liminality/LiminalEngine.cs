@@ -6,41 +6,37 @@ using System.Threading.Tasks;
 
 namespace PSIBR.Liminality
 {
-    public sealed class Engine<TStateMachine>
-    where TStateMachine : StateMachine<TStateMachine>
+    public sealed class LiminalEngine
     {
         private readonly IServiceProvider _serviceProvider;
-        private readonly StateMachineDefinition _stateMachineDefinition;
-
-        public Engine(IServiceProvider serviceProvider, StateMachineDefinition<TStateMachine> stateMachineDefinition)
+        public LiminalEngine(IServiceProvider serviceProvider)
         {
             _serviceProvider = serviceProvider;
-            _stateMachineDefinition = stateMachineDefinition;
         }
 
-        private TransitionResolution<TSignal>? ResolveTransition<TSignal>(Type stateType)
+        private TransitionResolution<TStateMachine, TSignal>? ResolveTransition<TStateMachine, TSignal>(StateMachineStateMap stateMachineDefinition, Type stateType)
+        where TStateMachine : StateMachine<TStateMachine>
         where TSignal : class, new()
         {
-            if (!_stateMachineDefinition.TryGetValue(new StateMachineDefinition.Input(stateType: stateType, signalType: typeof(TSignal)), out var transition))
+            if (!stateMachineDefinition.TryGetValue(new StateMachineStateMap.Input(stateType: stateType, signalType: typeof(TSignal)), out var transition))
                 return default;
-
-            IPrecondition<TSignal>? precondition = !(transition.PreconditionType is null)
-                ? _serviceProvider.GetService(transition.PreconditionType) as IPrecondition<TSignal>
-                : null;
 
             var state = _serviceProvider.GetService(transition.NewStateType);
 
+            IBeforeEnterHandler<TStateMachine, TSignal>? beforeEnterHandler = state as IBeforeEnterHandler<TStateMachine, TSignal>;
+
             if (state is null) throw new Exception($"Failed to resolve state: {transition.NewStateType.AssemblyQualifiedName}.");
 
-            return new TransitionResolution<TSignal>(transition, precondition, state);
+            return new TransitionResolution<TStateMachine, TSignal>(transition, beforeEnterHandler, state);
         }
 
-        public async ValueTask<AggregateSignalResult> SignalAsync<TSignal>(
+        public async ValueTask<AggregateSignalResult> SignalAsync<TStateMachine, TSignal>(
             TStateMachine self,
             TSignal signal,
             Func<CancellationToken, ValueTask<object>> loadStateFunc,
             Func<object, CancellationToken, ValueTask> persistStateFunc,
             CancellationToken cancellationToken = default)
+        where TStateMachine : StateMachine<TStateMachine>
         where TSignal : class, new()
         {
             var loadStateValueTask = loadStateFunc(cancellationToken);
@@ -48,26 +44,26 @@ namespace PSIBR.Liminality
 
             object startingState = loadStateValueTask.Result;
 
-            var resolution = ResolveTransition<TSignal>(startingState.GetType());
+            var resolution = ResolveTransition<TStateMachine, TSignal>(self.Definition.StateMap, startingState.GetType());
 
             if (resolution is null) return CreateResult(new TransitionNotFoundResult(startingState, signal));
 
-            if (!(resolution.Precondition is null))
+            if (resolution.BeforeEnterHandler is not null)
             {
                 ValueTask<AggregateException?> preconditionValueTask;
 
                 try
                 {
-                    preconditionValueTask = resolution.Precondition.CheckAsync(signal, cancellationToken);
+                    preconditionValueTask = resolution.BeforeEnterHandler.BeforeEnterAsync(new SignalContext<TStateMachine>(self, startingState, resolution.State), signal, cancellationToken);
 
-                    if (!preconditionValueTask.IsCompletedSuccessfully) await preconditionValueTask.ConfigureAwait(false);
+                    if (preconditionValueTask.IsCompletedSuccessfully is false) await preconditionValueTask.ConfigureAwait(false);
                 }
                 catch (Exception ex)
                 {
                     return CreateResult(new ExceptionThrownByPreconditionResult(startingState, signal, resolution.Transition, ex));
                 }
 
-                if (!(preconditionValueTask.Result is null)) return CreateResult(new RejectedByPreconditionResult(startingState, signal, resolution.Transition, preconditionValueTask.Result));
+                if (preconditionValueTask.Result is not null) return CreateResult(new RejectedByPreconditionResult(startingState, signal, resolution.Transition, preconditionValueTask.Result));
             }
 
             var persistStateValueTask = persistStateFunc(resolution.State, cancellationToken);
@@ -79,7 +75,7 @@ namespace PSIBR.Liminality
 
             try
             {
-                handlerValueTask = resolution.Handler.InvokeAsync(
+                handlerValueTask = resolution.Handler.OnEnterAsync(
                     context: new SignalContext<TStateMachine>(self, startingState, resolution.State),
                     signal,
                     cancellationToken);
@@ -103,23 +99,24 @@ namespace PSIBR.Liminality
             }
         }
 
-        private sealed class TransitionResolution<TSignal>
+        private sealed class TransitionResolution<TStateMachine, TSignal>
+        where TStateMachine : StateMachine<TStateMachine>
         where TSignal : class, new()
         {
-            public StateMachineDefinition.Transition Transition { get; }
+            public StateMachineStateMap.Transition Transition { get; }
 
-            public IPrecondition<TSignal>? Precondition;
+            public IBeforeEnterHandler<TStateMachine, TSignal>? BeforeEnterHandler;
 
             public object State;
 
-            public ISignalHandler<TStateMachine, TSignal>? Handler;
+            public IOnEnterHandler<TStateMachine, TSignal>? Handler;
 
-            public TransitionResolution(StateMachineDefinition.Transition transition, IPrecondition<TSignal>? precondition, object state)
+            public TransitionResolution(StateMachineStateMap.Transition transition, IBeforeEnterHandler<TStateMachine, TSignal>? precondition, object state)
             {
                 Transition = transition;
-                Precondition = precondition;
+                BeforeEnterHandler = precondition;
                 State = state;
-                Handler = state as ISignalHandler<TStateMachine, TSignal>;
+                Handler = state as IOnEnterHandler<TStateMachine, TSignal>;
             }
         }
     }
