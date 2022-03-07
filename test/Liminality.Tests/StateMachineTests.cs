@@ -40,8 +40,8 @@ namespace PSIBR.Liminality
         public void StateMachine_Invalid_Construction_Throws()
         {
             //Arrange
-            LiminalEngine? liminalEngine = default(LiminalEngine);
-            StateMachineDefinition<BasicStateMachine>? stateMachineDefinition = default(StateMachineDefinition<BasicStateMachine>);
+            LiminalEngine? liminalEngine = default;
+            StateMachineDefinition<BasicStateMachine>? stateMachineDefinition = default;
 
             //Act
             //Assert

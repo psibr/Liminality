@@ -26,5 +26,20 @@ namespace PSIBR.Liminality
                 services.AddTransient(stateMachineComponent);
             }
         }
+
+        public static void AddStateMachineDependenciesFromAttributes<TStateMachine>(
+            this IServiceCollection services)
+        where TStateMachine : StateMachine<TStateMachine>
+        {
+            var stateMap = StateMachineBuilder.BuildFromAttributes<TStateMachine>();
+            var definition = new StateMachineDefinition<TStateMachine>(stateMap);
+
+            services.AddSingleton(definition);
+
+            foreach (var stateMachineComponent in definition.GetStateTypes())
+            {
+                services.AddTransient(stateMachineComponent);
+            }
+        }
     }
 }

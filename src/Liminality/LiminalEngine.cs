@@ -6,6 +6,22 @@ using System.Threading.Tasks;
 
 namespace PSIBR.Liminality
 {
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
+    public class PossibleSignalAttribute<TSignal> 
+        : Attribute
+    where TSignal : class, new() { }
+
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
+    public class TransitionAttribute<TSignal, TState>
+        : Attribute
+    where TSignal : class, new()
+    where TState : class, new() { }
+
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
+    public class InitialStateAttribute<TState>
+        : Attribute
+    where TState : class, new() { }
+
     public sealed class LiminalEngine
     {
         private readonly IServiceProvider _serviceProvider;
@@ -39,7 +55,9 @@ namespace PSIBR.Liminality
         where TStateMachine : StateMachine<TStateMachine>
         where TSignal : class, new()
         {
+#pragma warning disable CA2012 // Use ValueTasks correctly
             var loadStateValueTask = loadStateFunc(cancellationToken);
+#pragma warning restore CA2012 // Use ValueTasks correctly
             if (!loadStateValueTask.IsCompletedSuccessfully) await loadStateValueTask.ConfigureAwait(false);
 
             object startingState = loadStateValueTask.Result;
@@ -73,10 +91,12 @@ namespace PSIBR.Liminality
 
             try
             {
+#pragma warning disable CA2012 // Use ValueTasks correctly
                 afterEntryHandlerValueTask = resolution.Handler.AfterEnterAsync(
                     context: new SignalContext<TStateMachine>(self, startingState, resolution.State),
                     signal,
                     cancellationToken);
+#pragma warning restore CA2012 // Use ValueTasks correctly
 
                 if (!afterEntryHandlerValueTask.IsCompletedSuccessfully) await afterEntryHandlerValueTask.ConfigureAwait(false);
             }
@@ -87,7 +107,7 @@ namespace PSIBR.Liminality
 
             return CreateResult(new TransitionedResult(startingState, resolution.State), afterEntryHandlerValueTask.Result);
 
-            AggregateSignalResult CreateResult(ISignalResult result, AggregateSignalResult? next = default)
+            static AggregateSignalResult CreateResult(ISignalResult result, AggregateSignalResult? next = default)
             {
                 var currentResult = new List<ISignalResult> { result };
 
