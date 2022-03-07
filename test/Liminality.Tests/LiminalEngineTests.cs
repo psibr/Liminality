@@ -35,7 +35,7 @@ namespace PSIBR.Liminality
         public void LiminalEngine_Invalid_Construction_Throws()
         {
             //Arrange
-            IServiceProvider? services = default(IServiceProvider);
+            IServiceProvider? services = default;
 
             //Act
             //Assert

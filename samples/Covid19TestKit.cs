@@ -13,19 +13,13 @@ namespace Samples
     {
         public static void AddCovid19TestKitSample(this IServiceCollection services)
         {
-            services.AddStateMachineDependencies<Covid19TestKit>(builder => builder
-                .StartsIn<Ready>()
-                .For<Ready>().On<BiologicalSequenceSample>().MoveTo<Analyzing>()
-                .For<Analyzing>().On<Analysis>().MoveTo<Evaluating>()
-                .For<Evaluating>().On<InconclusiveEvaluation>().MoveTo<Inconclusive>()
-                .For<Evaluating>().On<NegativeEvaluation>().MoveTo<Negative>()
-                .For<Evaluating>().On<PositiveEvaluation>().MoveTo<Positive>()
-                .Build());
+            services.AddStateMachineDependenciesFromAttributes<Covid19TestKit>();
 
             services.AddScoped<Factory>();
         }
     }
 
+    [InitialState<Ready>]
     public class Covid19TestKit : StateMachine<Covid19TestKit>
     {
         public class Factory
@@ -67,6 +61,7 @@ namespace Samples
         /// <summary>
         /// Empty state
         /// </summary>
+        [Transition<BiologicalSequenceSample, Analyzing>]
         public class Ready { }
 
         /// <summary>
@@ -93,6 +88,7 @@ namespace Samples
 
         }
 
+        [Transition<Analysis, Evaluating>]
         public class Analyzing
             : IBeforeEnterHandler<Covid19TestKit, BiologicalSequenceSample>
             , IAfterEnterHandler<Covid19TestKit, BiologicalSequenceSample>
@@ -133,6 +129,9 @@ namespace Samples
             public bool EGene { get; set; }
         }
 
+        [Transition<InconclusiveEvaluation, Inconclusive>]
+        [Transition<NegativeEvaluation, Negative>]
+        [Transition<Positive, Positive>]
         public class Evaluating
             : IAfterEnterHandler<Covid19TestKit, Analysis>
         {

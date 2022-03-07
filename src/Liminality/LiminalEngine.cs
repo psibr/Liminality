@@ -18,7 +18,7 @@ namespace PSIBR.Liminality
     where TState : class, new() { }
 
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
-    public class IntialStateAttribute<TState>
+    public class InitialStateAttribute<TState>
         : Attribute
     where TState : class, new() { }
 

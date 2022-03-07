@@ -17,7 +17,7 @@ namespace Samples
         }
     }
 
-    [IntialState<Created>]
+    [InitialState<Created>]
     public class OperationOrchestrationStateMachine : StateMachine<OperationOrchestrationStateMachine>
     {
         public class Repository

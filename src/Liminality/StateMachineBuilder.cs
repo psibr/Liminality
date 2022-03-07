@@ -15,11 +15,11 @@ namespace PSIBR.Liminality
         public static StateMachineStateMap BuildFromAttributes<TStateMachine>()
             where TStateMachine : StateMachine<TStateMachine>
         {
-            var initalStateAttribute = typeof(TStateMachine).CustomAttributes.FirstOrDefault(a => a.AttributeType == typeof(IntialStateAttribute<>));
-            if (initalStateAttribute == null)
+            var initialStateAttribute = typeof(TStateMachine).CustomAttributes.FirstOrDefault(a => a.AttributeType.IsGenericType && a.AttributeType.GetGenericTypeDefinition() == typeof(InitialStateAttribute<>));
+            if (initialStateAttribute == null)
                 throw new ArgumentException("State machines defined with attributes must have an InitialStateAttribute.");
 
-            StateMachineStateMap stateMachineStateMap = new(initalStateAttribute.AttributeType.GenericTypeArguments[0]);
+            StateMachineStateMap stateMachineStateMap = new(initialStateAttribute.AttributeType.GenericTypeArguments[0]);
 
             var stateTypes = typeof(TStateMachine)
                 .GetNestedTypes()
@@ -27,7 +27,7 @@ namespace PSIBR.Liminality
                 {
                     StateType = t,
                     Transitions = t.CustomAttributes
-                        .Where(a => a.AttributeType == typeof(TransitionAttribute<,>))
+                        .Where(a => a.AttributeType.IsGenericType && a.AttributeType.GetGenericTypeDefinition() == typeof(TransitionAttribute<,>))
                 })
                 .Where(m => m.Transitions.Any());
 
@@ -50,7 +50,7 @@ namespace PSIBR.Liminality
         {
             private readonly StateMachineStateMap _stateMachineStateMap;
 
-            public StateBuilder(StateMachineStateMap stateMachineDefinition!!)
+            public StateBuilder(StateMachineStateMap stateMachineStateMap!!)
             {
                 _stateMachineStateMap = stateMachineStateMap;
             }
