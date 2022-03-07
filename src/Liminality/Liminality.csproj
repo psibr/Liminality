@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net6</TargetFramework>
 	<LangVersion>preview</LangVersion>
     <PackageId>PSIBR.Liminality</PackageId>
     <Title>Transition library by a transfem so you know it's good</Title>
