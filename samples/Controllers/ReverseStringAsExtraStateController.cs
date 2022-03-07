@@ -25,7 +25,7 @@ namespace Samples.Controllers
             await stateMachine.SignalAsync(values);
 
             //kick off the machine's processing
-            var result = await stateMachine.SignalAsync(new ReverseStringAsExtraState.StartProcessing());
+            await stateMachine.SignalAsync(new ReverseStringAsExtraState.StartProcessing());
 
             // in this example state was stored on the machine instance
             return Ok(stateMachine.Output);

@@ -12,20 +12,19 @@
     <Authors>@aidapsibr</Authors>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <RequireLicenseAcceptance>true</RequireLicenseAcceptance>
-    <Copyright>Copyright © 2020 @aidapsibr</Copyright>
+    <Copyright>Copyright © 2022 @aidapsibr</Copyright>
     <RootNamespace>PSIBR.Liminality</RootNamespace>
     <Nullable>enable</Nullable>
     
     <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
-    <EmbedUntrackedSources>true</EmbedUntrackedSources> <!--Change to false once SourceLink #572 is fixed-->
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
   <ItemGroup>
       <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.*" PrivateAssets="All"/>
-      <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="5.*" />
+      <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="6.*" />
   </ItemGroup>
 
 </Project>

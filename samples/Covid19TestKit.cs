@@ -110,13 +110,14 @@ namespace Samples
             /// </summary>
             /// <param name="sample"></param>
             /// <param name="cancellationToken"></param>
+            [PossibleSignal<Analysis>]
             public ValueTask<AggregateSignalResult?> AfterEnterAsync(SignalContext<Covid19TestKit> context, BiologicalSequenceSample sample, CancellationToken cancellationToken = default)
             {
                 var result = new Analysis
                 {
                     Orf1Gene = sample.Inst?.Data?.Contains("ORF1") ?? false,
-                    NGene = sample.Inst?.Data?.Contains("N") ?? false,
-                    EGene = sample.Inst?.Data?.Contains("E") ?? false
+                    NGene = sample.Inst?.Data?.Contains('N') ?? false,
+                    EGene = sample.Inst?.Data?.Contains('E') ?? false
                 };
 
                 return new(context.Self.Signal(result));

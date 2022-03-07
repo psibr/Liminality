@@ -11,41 +11,13 @@ namespace Samples
     {
         public static void AddOperationOrchestrationStateMachine(this IServiceCollection services)
         {
-            services.AddStateMachineDependencies<OperationOrchestrationStateMachine>(builder => builder
-                .StartsIn<Created>()
-
-                .For<Created>().On<Request>().MoveTo<Requesting>()
-
-                .For<Requesting>().On<Request.Acknowledgement>().MoveTo<Requested>()
-                .For<Requesting>().On<Reset>().MoveTo<Created>()
-
-                .For<Requested>().On<Starting>().MoveTo<InProgress>()
-                .For<Requested>().On<Cancel>().MoveTo<Created>()
-                .For<Requested>().On<Reset>().MoveTo<Failed>()
-
-
-                .For<InProgress>().On<Ping>().MoveTo<InProgress>()
-                .For<InProgress>().On<Complete>().MoveTo<Created>()
-                .For<InProgress>().On<Pause>().MoveTo<Pausing>()
-                .For<InProgress>().On<Throw>().MoveTo<Failed>()
-                .For<InProgress>().On<Cancel>().MoveTo<Cancelling>()
-
-                .For<Paused>().On<Resume>().MoveTo<Requested>()
-
-                .For<Pausing>().On<Throw>().MoveTo<Failed>()
-                .For<Pausing>().On<Cancel>().MoveTo<Cancelled>()
-
-                // Handle duplicates idempotently
-                .For<Cancelling>().On<Cancel>().MoveTo<Cancelling>()
-                .For<Cancelling>().On<Throw>().MoveTo<Failed>()
-
-                .For<Cancelling>().On<Cancel.Acknowledgement>().MoveTo<Cancelled>()
-                .Build());
+            services.AddStateMachineDependenciesFromAttributes<OperationOrchestrationStateMachine>();
 
             services.AddSingleton<Repository>();
         }
     }
 
+    [IntialState<Created>]
     public class OperationOrchestrationStateMachine : StateMachine<OperationOrchestrationStateMachine>
     {
         public class Repository
@@ -105,23 +77,43 @@ namespace Samples
             else throw new NotSupportedException("This state machine cannot execute async");
         }
 
+        [TransitionAttribute<Request, Requesting>]
         public class Created { }
+
+        [TransitionAttribute<Request.Acknowledgement, Requested>]
         public class Requesting { }
+
+        [TransitionAttribute<Start, InProgress>]
+        [TransitionAttribute<Cancel, Cancelled>]
         public class Requested { }
-        public class Starting { }
+
+        [TransitionAttribute<Ping, InProgress>]
+        [TransitionAttribute<Pause, Pausing>]
+        [TransitionAttribute<Complete, Completed>]
+        [TransitionAttribute<Cancel, Cancelling>]
+        [TransitionAttribute<Throw, Failed>]
         public class InProgress { }
+
+        [TransitionAttribute<Throw, Failed>]
+        [TransitionAttribute<Cancel, Cancelled>]
         public class Pausing { }
+
+        [TransitionAttribute<Resume, Requested>]
         public class Paused { }
+
+        [TransitionAttribute<Throw, Failed>]
+        [TransitionAttribute<Cancel.Acknowledgement, Cancelled>]
         public class Cancelling { }
+
         public class Cancelled { }
-        public class Succeeded { }
+        public class Completed { }
         public class Failed { }
         
         public class Request 
         {
             public class Acknowledgement { }
         }
-        public class Reset { }
+
         public class Cancel
         {
             public class Acknowledgement { }
@@ -131,6 +123,8 @@ namespace Samples
         public class Complete { }
         public class Throw { }
         public class Pause { }
+
+        public class Start { }
 
     }
 }
