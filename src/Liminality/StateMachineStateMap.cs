@@ -5,7 +5,7 @@ namespace PSIBR.Liminality
 {
     public class StateMachineStateMap : Dictionary<StateMachineStateMap.Input, StateMachineStateMap.Transition>
     {
-        public StateMachineStateMap(Type initialState)
+        public StateMachineStateMap(Type initialState!!)
         {
             InitialState = initialState;
         }
@@ -17,7 +17,7 @@ namespace PSIBR.Liminality
             public Type CurrentStateType;
             public Type SignalType;
 
-            public Input(Type stateType, Type signalType)
+            public Input(Type stateType!!, Type signalType!!)
             {
                 CurrentStateType = stateType;
                 SignalType = signalType;
@@ -34,7 +34,7 @@ namespace PSIBR.Liminality
         {
             public Type NewStateType;
 
-            public Transition(Type newState)
+            public Transition(Type newState!!)
             {
                 NewStateType = newState;
             }

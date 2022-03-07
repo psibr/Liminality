@@ -9,7 +9,7 @@ namespace PSIBR.Liminality
     public class AggregateSignalResult 
         : IReadOnlyList<ISignalResult>
     {
-        public AggregateSignalResult(IReadOnlyList<ISignalResult> resultStack)
+        public AggregateSignalResult(IReadOnlyList<ISignalResult> resultStack!!)
         {
             if(resultStack is null) throw new ArgumentNullException(nameof(resultStack));
             if(resultStack.Count == 0) throw new ArgumentException("Cannot be empty", nameof(resultStack));

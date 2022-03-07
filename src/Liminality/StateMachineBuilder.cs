@@ -15,7 +15,7 @@ namespace PSIBR.Liminality
         {
             private readonly StateMachineStateMap _stateMachineDefintion;
 
-            public StateBuilder(StateMachineStateMap stateMachineDefinition)
+            public StateBuilder(StateMachineStateMap stateMachineDefinition!!)
             {
                 _stateMachineDefintion = stateMachineDefinition;
             }
@@ -42,7 +42,7 @@ namespace PSIBR.Liminality
         {
             private readonly StateBuilder _stateBuilder;
 
-            public ForStateContext(StateBuilder stateBuilder)
+            public ForStateContext(StateBuilder stateBuilder!!)
             {
                 _stateBuilder = stateBuilder;
             }
@@ -58,7 +58,7 @@ namespace PSIBR.Liminality
         {
             private readonly StateBuilder _stateBuilder;
 
-            public OnContext(StateBuilder stateBuilder)
+            public OnContext(StateBuilder stateBuilder!!)
             {
                 _stateBuilder = stateBuilder;
             }

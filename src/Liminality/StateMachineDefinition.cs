@@ -7,7 +7,7 @@ namespace PSIBR.Liminality
     public class StateMachineDefinition<TStateMachine>
     where TStateMachine : StateMachine<TStateMachine>
     {
-        public StateMachineDefinition(StateMachineStateMap map)
+        public StateMachineDefinition(StateMachineStateMap map!!)
         {
             StateMap = map;
         }
