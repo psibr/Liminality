@@ -6,7 +6,7 @@ namespace PSIBR.Liminality
 {
     public static class ServiceCollectionExtensions
     {
-        public static void AddLiminality(this IServiceCollection services)
+        public static void AddLiminality(this IServiceCollection services!!)
         {
             services.AddScoped<LiminalEngine>();
         }

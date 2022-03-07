@@ -8,7 +8,7 @@ namespace PSIBR.Liminality
     where TStateMachine : StateMachine<TStateMachine>
     {
         private readonly LiminalEngine _engine;
-        protected StateMachine(LiminalEngine engine, StateMachineDefinition<TStateMachine> definition)
+        protected StateMachine(LiminalEngine engine!!, StateMachineDefinition<TStateMachine> definition!!)
         {
             _engine = engine;
             Definition = definition;

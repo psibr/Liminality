@@ -9,7 +9,7 @@ namespace PSIBR.Liminality
     public sealed class LiminalEngine
     {
         private readonly IServiceProvider _serviceProvider;
-        public LiminalEngine(IServiceProvider serviceProvider)
+        public LiminalEngine(IServiceProvider serviceProvider!!)
         {
             _serviceProvider = serviceProvider;
         }
