@@ -41,11 +41,11 @@ Once you've cloned the repo, from the repo root folder, run:
 dotnet test
 ```
 
-## Contributions
+## Special thanks to contributors
 
-Soon!
+- [zoeysaurusrex](https://github.com/zoeysaurusrex)
 
-## Thanks
+## Libraries and tools we use
 
 These are the tools used to build Liminality 🥂
 
