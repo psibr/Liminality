@@ -27,5 +27,5 @@ jobs:
       run: dotnet pack --configuration Release
     - name: Publish
       run: dotnet nuget push "**/*.nupkg"  --api-key ${{ secrets.GITHUB_TOKEN }} --source "github"
-    - name: Publish
-      run: dotnet nuget push "**/*.nupkg"  --api-key ${{ secrets.NUGET_TOKEN }} --source "nuget"
+    - name: Publish to NuGet.org
+      run: dotnet nuget push "**/*.nupkg"  --api-key ${{ secrets.NUGET_TOKEN }} --source "nuget.org"
