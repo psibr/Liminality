@@ -15,6 +15,7 @@
 		<RootNamespace>PSIBR.Liminality</RootNamespace>
 		<Nullable>enable</Nullable>
 		<PackageReadmeFile>readme.md</PackageReadmeFile>
+		<PackageIcon>icon.png</PackageIcon>
 		
 		<EmbedUntrackedSources>true</EmbedUntrackedSources>
 		<PublishRepositoryUrl>true</PublishRepositoryUrl>
@@ -27,6 +28,7 @@
 
 	<ItemGroup>
     	<None Include="..\..\readme.md" Pack="true" PackagePath="\"/>
+		<None Include="..\..\icon.png" Pack="true" PackagePath="\"/>
 	</ItemGroup>
 
 	<ItemGroup>
