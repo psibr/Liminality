@@ -4,7 +4,8 @@ branches:
   main:
     tag: beta
   pull-request:
-    tag: beta
+    tag: pr
 ignore:
   sha: []
 merge-message-formats: {}
+
