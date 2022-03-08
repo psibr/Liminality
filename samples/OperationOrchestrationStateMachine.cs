@@ -77,32 +77,32 @@ namespace Samples
             else throw new NotSupportedException("This state machine cannot execute async");
         }
 
-        [TransitionAttribute<Request, Requesting>]
+        [Transition<Request, Requesting>]
         public class Created { }
 
-        [TransitionAttribute<Request.Acknowledgement, Requested>]
+        [Transition<Request.Acknowledgement, Requested>]
         public class Requesting { }
 
-        [TransitionAttribute<Start, InProgress>]
-        [TransitionAttribute<Cancel, Cancelled>]
+        [Transition<Start, InProgress>]
+        [Transition<Cancel, Cancelled>]
         public class Requested { }
 
-        [TransitionAttribute<Ping, InProgress>]
-        [TransitionAttribute<Pause, Pausing>]
-        [TransitionAttribute<Complete, Completed>]
-        [TransitionAttribute<Cancel, Cancelling>]
-        [TransitionAttribute<Throw, Failed>]
+        [Transition<Ping, InProgress>]
+        [Transition<Pause, Pausing>]
+        [Transition<Complete, Completed>]
+        [Transition<Cancel, Cancelling>]
+        [Transition<Throw, Failed>]
         public class InProgress { }
 
-        [TransitionAttribute<Throw, Failed>]
-        [TransitionAttribute<Cancel, Cancelled>]
+        [Transition<Throw, Failed>]
+        [Transition<Cancel, Cancelled>]
         public class Pausing { }
 
-        [TransitionAttribute<Resume, Requested>]
+        [Transition<Resume, Requested>]
         public class Paused { }
 
-        [TransitionAttribute<Throw, Failed>]
-        [TransitionAttribute<Cancel.Acknowledgement, Cancelled>]
+        [Transition<Throw, Failed>]
+        [Transition<Cancel.Acknowledgement, Cancelled>]
         public class Cancelling { }
 
         public class Cancelled { }
