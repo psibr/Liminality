@@ -10,7 +10,7 @@
             "request": "launch",
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/samples/bin/Debug/netcoreapp3.1/Samples.dll",
+            "program": "${workspaceFolder}/samples/bin/Debug/net6/Samples.dll",
             "args": [],
             "cwd": "${workspaceFolder}",
             "stopAtEntry": false,
