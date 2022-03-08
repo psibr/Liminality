@@ -2,6 +2,7 @@ mode: ContinuousDelivery
 next-version: 0.1.0-beta
 branches:
   main:
+    mode: ContinuousDeployment
     tag: ci
 ignore:
   sha: []
