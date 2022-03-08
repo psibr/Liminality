@@ -2,9 +2,7 @@ mode: ContinuousDelivery
 next-version: 0.1.0-beta
 branches:
   main:
-    tag: beta
-  pull-request:
-    tag: pr
+    tag: ci
 ignore:
   sha: []
 merge-message-formats: {}
