@@ -25,3 +25,7 @@ jobs:
       run: dotnet build --no-restore
     - name: Test
       run: dotnet test --no-build --verbosity normal
+    - name: Pack
+      run: dotnet pack
+    - name: Publish
+      run: dotnet nuget push "**/*.nupkg"  --api-key ${{ secrets.GITHUB_TOKEN }} --source "github"
