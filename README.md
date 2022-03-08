@@ -1,6 +1,6 @@
 # PSIBR.Liminality
 
->Transition library by a transfem so you know it's good
+>Transition library by a transfem, so you know it's good. 😉
 
 PSIBR.Liminality is a basic state machine modelling library that handles a lot of organization descisions for you, but doesn't try to boil the ocean. 
 
