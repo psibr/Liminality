@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace PSIBR.Liminality
 {
@@ -38,19 +39,24 @@ namespace PSIBR.Liminality
         }
     }
 
+    [DebuggerDisplay("{StartingState} + {Signal} ---> {NewState}")]
     public class TransitionedResult : ISignalResult
     {
-        public TransitionedResult(object startingState, object newState)
+        public TransitionedResult(object startingState, object signal, object newState)
         {
             StartingState = startingState;
+            Signal = signal;
             NewState = newState;
         }
 
         public object StartingState { get; }
 
+        public object Signal { get; }
+
         public object NewState { get; }
     }
 
+    [DebuggerDisplay("{StartingState} + {Signal} ---> {NewState} !!")]
     public class ExceptionThrownByAfterEntryHandlerResult : ISignalResult
     {
         public ExceptionThrownByAfterEntryHandlerResult(
@@ -78,6 +84,7 @@ namespace PSIBR.Liminality
         public AggregateException HandlerExceptions { get; }
     }
 
+    [DebuggerDisplay("{StartingState} + {Signal} ---> !!")]
     public class ExceptionThrownByBeforeEnterHandlerResult : ISignalResult
     {
         public ExceptionThrownByBeforeEnterHandlerResult(
@@ -105,6 +112,7 @@ namespace PSIBR.Liminality
         public AggregateException Exceptions { get; }
     }
 
+    [DebuggerDisplay("{StartingState} + {Signal} ---> ?")]
     public class TransitionNotFoundResult : ISignalResult
     {
         public TransitionNotFoundResult(object startingState, object signal)

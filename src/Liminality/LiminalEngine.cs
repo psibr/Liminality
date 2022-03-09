@@ -85,7 +85,7 @@ namespace PSIBR.Liminality
             var persistStateValueTask = persistStateFunc(resolution.State, cancellationToken);
             if (!persistStateValueTask.IsCompletedSuccessfully) await persistStateValueTask.ConfigureAwait(false);
 
-            if (resolution.Handler is null) return CreateResult(new TransitionedResult(startingState, resolution.State));
+            if (resolution.Handler is null) return CreateResult(new TransitionedResult(startingState, signal, resolution.State));
 
             ValueTask<AggregateSignalResult?> afterEntryHandlerValueTask;
 
@@ -105,7 +105,7 @@ namespace PSIBR.Liminality
                 return CreateResult(new ExceptionThrownByAfterEntryHandlerResult(startingState, signal, resolution.State, ex));
             }
 
-            return CreateResult(new TransitionedResult(startingState, resolution.State), afterEntryHandlerValueTask.Result);
+            return CreateResult(new TransitionedResult(startingState, signal, resolution.State), afterEntryHandlerValueTask.Result);
 
             static AggregateSignalResult CreateResult(ISignalResult result, AggregateSignalResult? next = default)
             {
