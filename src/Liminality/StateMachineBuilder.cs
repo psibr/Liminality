@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace PSIBR.Liminality
 {
@@ -21,29 +23,43 @@ namespace PSIBR.Liminality
 
             StateMachineStateMap stateMachineStateMap = new(initialStateAttribute.AttributeType.GenericTypeArguments[0]);
 
-            var stateTypes = typeof(TStateMachine)
-                .GetNestedTypes()
-                .Select(t => new
-                {
-                    StateType = t,
-                    Transitions = t.CustomAttributes
-                        .Where(a => a.AttributeType.IsGenericType && a.AttributeType.GetGenericTypeDefinition() == typeof(TransitionAttribute<,>))
-                })
-                .Where(m => m.Transitions.Any());
-
-            foreach (var stateType in stateTypes)
+            Dictionary<int, IEnumerable<TransitionMatches>> matches = new();
+            int index = 0;
+            IEnumerable<TransitionMatches> currentLevel =  new[] { new TransitionMatches(typeof(TStateMachine), Enumerable.Empty<CustomAttributeData>()) };
+            do
             {
-                foreach (var transtion in stateType.Transitions)
-                {
-                    var args = transtion.AttributeType.GenericTypeArguments;
-                    var signal = args[0];
-                    var newState = args[1];
+                matches[index] = DiscoverPotentialTransitionStates(currentLevel);
+                index++;
+                currentLevel = matches[index - 1];
 
-                    stateMachineStateMap[new StateMachineStateMap.Input(stateType.StateType, signal)] = new StateMachineStateMap.Transition(newState);
+            } while (matches[index-1].Any());
+
+            foreach (var match in matches.SelectMany(s => s.Value))
+            {
+                if (match.Transitions.Any())
+                {
+                    foreach (var transtion in match.Transitions)
+                    {
+                        var args = transtion.AttributeType.GenericTypeArguments;
+                        var signal = args[0];
+                        var newState = args[1];
+
+                        stateMachineStateMap[new StateMachineStateMap.Input(match.StateType, signal)] = new StateMachineStateMap.Transition(newState);
+                    }
                 }
             }
 
             return stateMachineStateMap;
+
+            static IEnumerable<TransitionMatches> DiscoverPotentialTransitionStates(IEnumerable<TransitionMatches> matches)
+            {
+                return matches
+                    .Select(match => match.StateType
+                        .GetNestedTypes()
+                        .Select(t => new TransitionMatches(StateType: t, Transitions: t.CustomAttributes
+                                .Where(a => a.AttributeType.IsGenericType && a.AttributeType.GetGenericTypeDefinition() == typeof(TransitionAttribute<,>))
+                    ))).SelectMany(types => types);
+            }
         }
 
         public class StateBuilder
@@ -103,4 +119,6 @@ namespace PSIBR.Liminality
                 => _stateBuilder.AddTransition<TState, TSignal, TNewState>();
         }
     }
+
+    internal record TransitionMatches(Type StateType, IEnumerable<System.Reflection.CustomAttributeData> Transitions);
 }

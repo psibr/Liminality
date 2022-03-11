@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using PSIBR.Liminality;
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Samples
@@ -9,11 +10,11 @@ namespace Samples
 
     public static class OrchestrationStateMachineExtentions
     {
-        public static void AddOperationOrchestrationStateMachine(this IServiceCollection services)
+        public static void AddOperationOrchestration(this IServiceCollection services)
         {
             services.AddStateMachineDependenciesFromAttributes<OperationOrchestrationStateMachine>();
 
-            services.AddSingleton<Repository>();
+            services.AddScoped<Repository>();
         }
     }
 
@@ -62,7 +63,7 @@ namespace Samples
 
         public string OrchestrationId { get; }
 
-        public AggregateSignalResult Signal<TSignal>(TSignal signal)
+        public async Task<AggregateSignalResult> SignalAsync<TSignal>(TSignal signal)
         where TSignal : class, new()
         {
             var valueTask = SignalAsync(
@@ -71,34 +72,63 @@ namespace Samples
                 (state, cancellationToken) => { State = state; return new ValueTask(); },
                 default);
 
-            // handle synchronyously ONLY as an example of this capability
-            if (valueTask.IsCompletedSuccessfully) return valueTask.Result;
-            else if (valueTask.IsFaulted && valueTask.AsTask().Exception is Exception ex) throw ex;
-            else throw new NotSupportedException("This state machine cannot execute async");
+            return await valueTask.ConfigureAwait(false);
         }
 
         [Transition<Request, Requesting>]
         public class Created { }
 
         [Transition<Request.Acknowledgement, Requested>]
-        public class Requesting { }
+        public class Requesting
+            : IAfterEnterHandler<OperationOrchestrationStateMachine, Request>
+        {
+            public async ValueTask<AggregateSignalResult?> AfterEnterAsync(SignalContext<OperationOrchestrationStateMachine> context, Request signal, CancellationToken cancellationToken = default)
+            {
+                //do work maybe publish to a queue and get a confirmation...
 
-        [Transition<Start, InProgress>]
-        [Transition<Cancel, Cancelled>]
-        public class Requested { }
+                return await context.Self.SignalAsync(new Request.Acknowledgement()).ConfigureAwait(false);
+            }
+
+            [Transition<Start, InProgress>]
+            [Transition<Cancel, Cancelled>]
+            public class Requested
+                : IAfterEnterHandler<OperationOrchestrationStateMachine, Request.Acknowledgement>
+            {
+                public async ValueTask<AggregateSignalResult?> AfterEnterAsync(SignalContext<OperationOrchestrationStateMachine> context, Request.Acknowledgement signal, CancellationToken cancellationToken = default)
+                {
+                    //read from queue
+
+                    return await context.Self.SignalAsync(new Start()).ConfigureAwait(false);
+                }
+            }
+        }
 
         [Transition<Ping, InProgress>]
         [Transition<Pause, Pausing>]
         [Transition<Complete, Completed>]
         [Transition<Cancel, Cancelling>]
         [Transition<Throw, Failed>]
-        public class InProgress { }
+        public class InProgress
+            : IAfterEnterHandler<OperationOrchestrationStateMachine, Start>
+        {
+            public ValueTask<AggregateSignalResult?> AfterEnterAsync(SignalContext<OperationOrchestrationStateMachine> context, Start signal, CancellationToken cancellationToken = default)
+            {
+                //do work
+
+                // is the signal an internal signal of Requested (internal transition)?
+                //var isSubState = signal.GetType().DeclaringType == typeof(Requested);
+
+
+
+                return default;
+            }
+        }
 
         [Transition<Throw, Failed>]
         [Transition<Cancel, Cancelled>]
         public class Pausing { }
 
-        [Transition<Resume, Requested>]
+        [Transition<Resume, Requesting.Requested>]
         public class Paused { }
 
         [Transition<Throw, Failed>]
