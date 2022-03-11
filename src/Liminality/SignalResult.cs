@@ -81,6 +81,7 @@ namespace PSIBR.Liminality
         }
     }
 
+    [DebuggerDisplay("{StartingState} + {Signal} ---> {NewState}")]
     public class TransitionedResult : ISignalResult
     {
         public TransitionedResult(object startingState, object signal, object newState)
@@ -108,6 +109,7 @@ namespace PSIBR.Liminality
         public override string ToString() => $"{GetNestedName(StartingState)} + {GetNestedName(Signal)} ---> {GetNestedName(NewState)}";
     }
 
+    [DebuggerDisplay("{StartingState} + {Signal} ---> {NewState} !!")]
     public class ExceptionThrownByAfterEntryHandlerResult : ISignalResult
     {
         public ExceptionThrownByAfterEntryHandlerResult(
@@ -137,6 +139,7 @@ namespace PSIBR.Liminality
         public override string ToString() => $"{StartingState} + {Signal} ---> {NewState}";
     }
 
+    [DebuggerDisplay("{StartingState} + {Signal} ---> !!")]
     public class ExceptionThrownByBeforeEnterHandlerResult : ISignalResult
     {
         public ExceptionThrownByBeforeEnterHandlerResult(
@@ -166,6 +169,7 @@ namespace PSIBR.Liminality
         public override string ToString() => $"{StartingState} + {Signal} ---> !!";
     }
 
+    [DebuggerDisplay("{StartingState} + {Signal} ---> ?")]
     public class TransitionNotFoundResult : ISignalResult
     {
         public TransitionNotFoundResult(object startingState, object signal)
