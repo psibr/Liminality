@@ -36,6 +36,8 @@ namespace Samples
 
             services.AddReverseStringAsExtraStateSample();
 
+            services.AddOperationOrchestration();
+
             services.AddControllers();
 
             services.AddSwaggerGen(c =>
