@@ -6,21 +6,7 @@ using System.Threading.Tasks;
 
 namespace PSIBR.Liminality
 {
-    [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
-    public class PossibleSignalAttribute<TSignal> 
-        : Attribute
-    where TSignal : class, new() { }
-
-    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
-    public class TransitionAttribute<TSignal, TState>
-        : Attribute
-    where TSignal : class, new()
-    where TState : class, new() { }
-
-    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
-    public class InitialStateAttribute<TState>
-        : Attribute
-    where TState : class, new() { }
+    using static AggregateSignalResult;
 
     public sealed class LiminalEngine
     {
@@ -106,15 +92,6 @@ namespace PSIBR.Liminality
             }
 
             return CreateResult(new TransitionedResult(startingState, signal, resolution.State), afterEntryHandlerValueTask.Result);
-
-            static AggregateSignalResult CreateResult(ISignalResult result, AggregateSignalResult? next = default)
-            {
-                var currentResult = new List<ISignalResult> { result };
-
-                if (next is null) return new AggregateSignalResult(currentResult);
-
-                return new AggregateSignalResult(next.Concat(currentResult).ToList());
-            }
         }
 
         private sealed class TransitionResolution<TStateMachine, TSignal>
