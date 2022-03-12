@@ -6,6 +6,25 @@ using System.Reflection;
 namespace PSIBR.Liminality
 {
 
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
+    public class PossibleSignalAttribute<TSignal>
+        : Attribute
+    where TSignal : class, new()
+    { }
+
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
+    public class TransitionAttribute<TSignal, TState>
+        : Attribute
+    where TSignal : class, new()
+    where TState : class, new()
+    { }
+
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
+    public class InitialStateAttribute<TState>
+        : Attribute
+    where TState : class, new()
+    { }
+
     public class StateMachineBuilder
     {
         public StateBuilder StartsIn<TState>()
@@ -13,6 +32,8 @@ namespace PSIBR.Liminality
         {
             return new StateBuilder(new StateMachineStateMap(typeof(TState)));
         }
+
+        internal record TransitionMatches(Type StateType, IEnumerable<CustomAttributeData> Transitions);
 
         public static StateMachineStateMap BuildFromAttributes<TStateMachine>()
             where TStateMachine : StateMachine<TStateMachine>
@@ -119,6 +140,4 @@ namespace PSIBR.Liminality
                 => _stateBuilder.AddTransition<TState, TSignal, TNewState>();
         }
     }
-
-    internal record TransitionMatches(Type StateType, IEnumerable<System.Reflection.CustomAttributeData> Transitions);
 }

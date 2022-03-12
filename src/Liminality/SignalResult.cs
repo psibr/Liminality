@@ -1,8 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -46,7 +45,33 @@ namespace PSIBR.Liminality
     [JsonInterfaceConverter(typeof(SignalResultConverter))]
     public interface ISignalResult
     {
+        object StartingState { get; }
 
+        object Signal { get; }
+
+        string GetNestedName(object value)
+        {
+            var type = value.GetType();
+            Stack<string> names = new();
+
+            do
+            {
+                names.Push(type.Name);
+
+                if(type.DeclaringType is null) break;
+                type = type.DeclaringType;
+
+            } while (!IsTerminatingType(type));
+
+            return string.Join(':', names);
+
+            static bool IsTerminatingType(Type type)
+            {
+                return type.BaseType is not null
+                    && type.BaseType.IsGenericType
+                    && type.BaseType.GetGenericTypeDefinition() == typeof(StateMachine<>);
+            }
+        }
     }
 
     public class AggregateSignalResult
@@ -79,9 +104,29 @@ namespace PSIBR.Liminality
         {
             return ((IEnumerable)InnerResults).GetEnumerator();
         }
+
+        public static AggregateSignalResult CreateResult(ISignalResult result, AggregateSignalResult? next = default)
+        {
+            if (result is AggregateSignalResult aggregate)
+            {
+                if (next is null) return aggregate;
+
+                return new AggregateSignalResult(next.Concat(aggregate).ToList());
+            }
+
+            var currentResult = new List<ISignalResult> { result };
+
+            if (next is null) return new AggregateSignalResult(currentResult);
+
+            return new AggregateSignalResult(next.Concat(currentResult).ToList());
+        }
+
+        public static AggregateSignalResult Combine(AggregateSignalResult result!!, AggregateSignalResult next!!)
+        {
+            return new AggregateSignalResult(next.Concat(result).ToList());
+        }
     }
 
-    [DebuggerDisplay("{StartingState} + {Signal} ---> {NewState}")]
     public class TransitionedResult : ISignalResult
     {
         public TransitionedResult(object startingState, object signal, object newState)
@@ -97,19 +142,9 @@ namespace PSIBR.Liminality
 
         public object NewState { get; }
 
-        protected string GetNestedName(object value)
-        {
-            var type = value.GetType();
-            if (type.DeclaringType is null)
-                return type.Name;
-            else
-                return type.DeclaringType.Name + "+" + type.Name;
-        }
-
-        public override string ToString() => $"{GetNestedName(StartingState)} + {GetNestedName(Signal)} ---> {GetNestedName(NewState)}";
+        public override string ToString() => $"{((ISignalResult)this).GetNestedName(StartingState)} + {((ISignalResult)this).GetNestedName(Signal)} ---> {((ISignalResult)this).GetNestedName(NewState)}";
     }
 
-    [DebuggerDisplay("{StartingState} + {Signal} ---> {NewState} !!")]
     public class ExceptionThrownByAfterEntryHandlerResult : ISignalResult
     {
         public ExceptionThrownByAfterEntryHandlerResult(
@@ -136,10 +171,9 @@ namespace PSIBR.Liminality
 
         public AggregateException HandlerExceptions { get; }
 
-        public override string ToString() => $"{StartingState} + {Signal} ---> {NewState}";
+        public override string ToString() => $"{((ISignalResult)this).GetNestedName(StartingState)} + {((ISignalResult)this).GetNestedName(Signal)} ---> {((ISignalResult)this).GetNestedName(NewState)}";
     }
 
-    [DebuggerDisplay("{StartingState} + {Signal} ---> !!")]
     public class ExceptionThrownByBeforeEnterHandlerResult : ISignalResult
     {
         public ExceptionThrownByBeforeEnterHandlerResult(
@@ -166,10 +200,9 @@ namespace PSIBR.Liminality
 
         public AggregateException Exceptions { get; }
 
-        public override string ToString() => $"{StartingState} + {Signal} ---> !!";
+        public override string ToString() => $"{((ISignalResult)this).GetNestedName(StartingState)} + {((ISignalResult)this).GetNestedName(Signal)} ---> !!";
     }
 
-    [DebuggerDisplay("{StartingState} + {Signal} ---> ?")]
     public class TransitionNotFoundResult : ISignalResult
     {
         public TransitionNotFoundResult(object startingState, object signal)
@@ -182,6 +215,6 @@ namespace PSIBR.Liminality
 
         public object Signal { get; }
 
-        public override string ToString() => $"{StartingState} + {Signal} ---> ?";
+        public override string ToString() => $"{((ISignalResult)this).GetNestedName(StartingState)} + {((ISignalResult)this).GetNestedName(Signal)} ---> ?";
     }
 }

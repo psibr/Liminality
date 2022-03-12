@@ -36,7 +36,7 @@ namespace Samples
 
             services.AddReverseStringAsExtraStateSample();
 
-            services.AddOperationOrchestration();
+            services.AddOperationOrchestrator();
 
             services.AddControllers();
 
