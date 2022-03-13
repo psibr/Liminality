@@ -44,5 +44,6 @@ namespace PSIBR.Liminality.Tests
         // Inputs
         public class Start { }
         public class Finish { }
+        public class Cancel { }
     }
 }
