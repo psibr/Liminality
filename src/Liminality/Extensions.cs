@@ -12,7 +12,7 @@
         public static Diagram GetDiagram<TStateMachine>(this Graph<TStateMachine> graph!!)
             where TStateMachine : StateMachine<TStateMachine>
         {
-            var writer = new MermaidDiagramWriter<TStateMachine>(graph);
+            var writer = new MermaidStateDiagramWriter<TStateMachine>(graph);
             return writer.Write();
         }
     }

@@ -33,5 +33,6 @@ namespace PSIBR.Liminality
             var render = diagram.Render();
             Assert.NotNull(render);
         }
+        
     }
 }

@@ -15,7 +15,7 @@ namespace PSIBR.Liminality
 
         private readonly TStateMachine _stateMachine;
         private readonly Graph<TStateMachine> _graph;
-        private readonly Dictionary<string, GraphNode> _nodeTypeCache = new Dictionary<string, GraphNode>();
+        private readonly Dictionary<string, GraphNode> _nodeTypeCache = new();
 
         public Graph<TStateMachine> Build()
         {
@@ -39,7 +39,6 @@ namespace PSIBR.Liminality
 
         private GraphNode GetOrCreateSubNode(GraphNode rootNode, Type type, Type? signalType)
         {
-            var key = MakeCacheKey(type, signalType);
             //If we know about this, return so we can continue
             //mapping the transit
             if (_nodeTypeCache.ContainsKey(type.Name))
@@ -76,13 +75,13 @@ namespace PSIBR.Liminality
                 _nodeTypeCache[key] = graphNode;
         }
 
-        private string MakeCacheKey(GraphNode graphNode!!)
+        private static string MakeCacheKey(GraphNode graphNode!!)
         {
             var key = $"{graphNode.Name} {(graphNode.Condition is not null ? $":{graphNode.Condition}" : string.Empty)}";
             return key;
         }
 
-        private string MakeCacheKey(Type type, Type? signalType)
+        private static string MakeCacheKey(Type type, Type? signalType)
         {
             var key = $"{type.Name} {(signalType is not null ? $":{signalType.Name}" : string.Empty)}";
             return key;
