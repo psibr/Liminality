@@ -9,7 +9,7 @@ namespace PSIBR.Liminality.Tests
 {
     using static BasicStateMachine;
 
-    public class ContainerTests
+    public class DependencyTests
     {
         [Fact]
         public void CanResolveStateMachine()
